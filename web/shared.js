@@ -1,0 +1,11 @@
+"use strict";
+const shareToken=location.pathname.split("/").pop();let displayData=null,displayInterval=5000;
+function displayDraw(){if(displayData)PanelCharts.drawAll(displayData.widgets,displayData.range_minutes);}
+async function displayPoll(){
+ try{const r=await fetch(`/api/public/dashboards/${encodeURIComponent(shareToken)}`,{signal:AbortSignal.timeout(12000)});const d=await r.json();if(!r.ok){displayData=null;$("#display-grid").innerHTML="";throw Error(d.error||"Dashboard unavailable.");}displayData=d;displayInterval=d.refresh_seconds*1000;Theme.preset(d.theme);document.title=d.name+" · Edge Console";$("#display-name").textContent=d.name;$("#display-description").textContent=d.description;$("#display-environment").textContent=d.environment_name||"SAVED DASHBOARD";$("#display-time").textContent=new Date().toLocaleTimeString("en-GB");$("#display-status").className=`live-badge ${d.status==="live"?"":"pending"}`;$("#display-status").innerHTML=`<span class="dot"></span>${d.status==="live"?"Live":"Data unavailable"}`;$("#display-notice").innerHTML=d.message?`<div class="notice">${esc(d.message)}</div>`:"";$("#display-grid").innerHTML=d.widgets.length?d.widgets.map(p=>`<article class="dashboard-widget" style="grid-column:span ${p.width};height:${p.height}px"><div class="widget-heading"><div><h3>${esc(p.title)}</h3><span>${esc(p.metric_label)}</span></div></div><div class="widget-content">${PanelCharts.html(p)}</div><div class="widget-foot" title="${esc(p.note)}">${esc(p.note)}</div></article>`).join(""):'<div class="empty-state"><h2>No panels yet</h2><p>Add panels in the dashboard editor.</p></div>';$("#display-foot").textContent=`Updated ${timeText(d.updated_at)} · ${d.range_minutes} minute window · ${d.refresh_seconds}s refresh`;displayDraw();}
+ catch(e){$("#display-status").className="live-badge offline";$("#display-status").textContent="Disconnected";$("#display-notice").innerHTML=`<div class="notice error">${esc(e.message)} Retrying automatically.</div>`;}
+ setTimeout(displayPoll,displayInterval);
+}
+$("#display-fullscreen").onclick=()=>{if(document.fullscreenElement)document.exitFullscreen();else document.documentElement.requestFullscreen?.();};
+window.addEventListener("resize",displayDraw);window.addEventListener("edge-theme-change",displayDraw);
+displayPoll();

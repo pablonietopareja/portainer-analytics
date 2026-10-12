@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#151a20"><meta name="description" content="Local monitoring console for Portainer environments. Live CPU, memory, containers, and storage.">
+  <script src="/theme.js"></script>
+  <title>Edge Console · Portainer</title>
+  <link rel="icon" href="data:,"><link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/alpha.css">
+  <script src="/app.js" defer></script><script src="/views.js" defer></script><script src="/charts.js" defer></script><script src="/settings.js" defer></script><script src="/dashboards.js" defer></script><script src="/controller.js" defer></script>
+</head>
+<body>
+  <aside class="sidebar">
+    <a class="brand" href="#view=overview" data-view="overview" aria-label="Edge Console, monitoring"><span class="brand-mark"><i></i><i></i><i></i></span><span>edge<span class="brand-light">console</span><small>OPERATIONS / PORTAINER</small></span></a>
+    <div class="env-block"><label for="environment">ACTIVE ENVIRONMENT</label><select id="environment"><option>Connecting to Portainer…</option></select><div id="env-connection" class="subtle">Discovering environments</div></div>
+    <div class="nav-caption">WORKSPACE</div>
+    <nav aria-label="Sections">
+      <button data-view="overview" class="nav-item active"><span class="nav-symbol">◫</span>Overview<span class="nav-count">01</span></button>
+      <button data-view="containers" class="nav-item"><span class="nav-symbol">▣</span>Containers<span class="nav-count" id="count-containers">—</span></button>
+      <button data-view="stacks" class="nav-item"><span class="nav-symbol">≡</span>Stacks<span class="nav-count" id="count-stacks">—</span></button>
+      <button data-view="images" class="nav-item"><span class="nav-symbol">◇</span>Images<span class="nav-count" id="count-images">—</span></button>
+      <button data-view="storage" class="nav-item"><span class="nav-symbol">▤</span>Storage</button>
+      <button data-view="networks" class="nav-item"><span class="nav-symbol">⌘</span>Networks<span class="nav-count" id="count-networks">—</span></button>
+      <button data-view="events" class="nav-item"><span class="nav-symbol">⌁</span>Activity</button>
+      <button data-view="system" class="nav-item"><span class="nav-symbol">⚙</span>System</button>
+      <button data-view="dashboards" class="nav-item"><span class="nav-symbol" aria-hidden="true">▦</span>Dashboards</button>
+      <button data-view="settings" class="nav-item"><span class="nav-symbol" aria-hidden="true">☷</span>Settings</button>
+    </nav>
+    <div class="fleet"><div class="nav-caption">DISCOVERED ENVIRONMENTS</div><div id="fleet"></div></div>
+    <div class="sidebar-footer"><span class="dot"></span><span>LOCAL WORKSPACE<small>Portainer API · Read only</small></span><span class="mono">:3009</span></div>
+  </aside>
+  <div class="workspace">
+    <header class="topbar"><button id="mobile-menu" class="icon-button" aria-label="Open menu">☰</button><div class="breadcrumb">Infrastructure <span>/</span> <b id="breadcrumb-env">Portainer</b></div><div class="topbar-right"><select class="theme-switch" data-theme-control aria-label="Color theme"><option value="light">Light</option><option value="dark">Dark</option><option value="system">System</option></select><span id="connection" class="live-badge pending"><span class="dot"></span>Connecting</span><span class="separator"></span><span id="clock" class="mono"></span></div></header>
+    <main>
+      <div id="alerts" role="status" aria-live="polite"></div>
+      <section class="page-heading"><div><div class="eyebrow" id="page-eyebrow">INFRASTRUCTURE CONTROL</div><h1 id="page-title">Overview</h1><p id="page-description">Operational visibility into your Docker environments.</p></div><div class="heading-actions"><button id="pause" class="button" title="Pause the view; the server continues collecting metrics">Ⅱ <span>Pause view</span></button><button id="export" class="button" disabled>↓ Export</button></div></section>
+      <section id="content" aria-label="Environment information"><div class="empty-state"><span class="loader"></span><h2>Connecting to your infrastructure</h2><p>Discovering environments and collecting the first sample.</p><div class="empty-foot">CPU · MEMORY · NETWORK · STORAGE</div></div></section>
+      <footer class="page-footer"><span><span class="dot muted-dot"></span> EDGE CONSOLE <span class="footer-divider">/</span> PORTAINER API</span><span id="freshness">Waiting for the first sample</span></footer>
+    </main>
+  </div>
+  <dialog id="detail"><div class="drawer-header"><div><div class="eyebrow" id="detail-eyebrow">DETAIL</div><h2 id="detail-title"></h2></div><button id="close-detail" class="icon-button" aria-label="Close details">×</button></div><div id="detail-tabs"></div><div id="detail-body"></div></dialog>
+  <div id="toast" role="status"></div>
+  <div id="auth-screen" hidden></div>
+  <dialog id="alpha-modal"><div id="alpha-modal-content"></div></dialog>
+</body>
+</html>

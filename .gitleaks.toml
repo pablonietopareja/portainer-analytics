@@ -1,0 +1,7 @@
+title = "Portainer Analytics source scan"
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Installed development dependencies and generated caches"
+paths = ['''(?:^|[\\/])(?:node_modules|\.venv|__pycache__|\.ruff_cache|\.pytest_cache)(?:[\\/]|$)''']

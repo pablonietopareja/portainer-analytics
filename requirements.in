@@ -1,0 +1,2 @@
+# Runtime dependencies. Regenerate requirements.txt with the command in CONTRIBUTING.md.
+requests==2.34.2

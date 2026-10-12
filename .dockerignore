@@ -1,0 +1,11 @@
+*
+!Dockerfile
+!requirements.txt
+!VERSION
+!portainer_console.py
+!engine.py
+!persistence.py
+!dashboard_metrics.py
+!telemetry.py
+!web/
+!web/**

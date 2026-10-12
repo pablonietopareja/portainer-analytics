@@ -1,0 +1,13 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
+const strokes=[];let points=[];
+const ctx={scale(){},beginPath(){points=[]},moveTo(x,y){points.push(['move',x,y])},lineTo(x,y){points.push(['line',x,y])},stroke(){strokes.push({color:this.strokeStyle,points})},fillText(){},arc(){},fill(){},setLineDash(){}};
+const scope=vm.createContext({document:{documentElement:{},querySelector:()=>({getBoundingClientRect:()=>({width:500,height:200}),getContext:()=>ctx})},window:{devicePixelRatio:1},CSS:{escape:x=>x},getComputedStyle:()=>({getPropertyValue:()=>''}),esc:String,bytes:String,rate:String,pct:String,number:String});
+vm.runInContext(fs.readFileSync(path.join(__dirname,'../web/charts.js'),'utf8'),scope);
+const charts=vm.runInContext('PanelCharts',scope),end=Date.now();
+const panel={id:'test',title:'CPU',visual:'line',color:'green',unit:'percent',threshold:null,series:[{name:'Synthetic',value:20,points:Array.from({length:360},(_,i)=>({t:end-(359-i)*240000,v:20}))}]};
+charts.draw(panel,1440);
+assert.equal(strokes.find(s=>s.color==='#43b897').points.filter(p=>p[0]==='line').length,359,'24h sampled line remains connected');
+strokes.length=0;panel.series[0].points[180].v=null;charts.draw(panel,1440);
+assert.equal(strokes.find(s=>s.color==='#43b897').points.filter(p=>p[0]==='move').length,2,'explicit outages break the path');
+assert.ok(!charts.html({...panel,visual:'stat',threshold:0,series:[{name:'Unavailable',value:null}]}).includes('Above threshold'));
+console.log('PASS: long-window lines, explicit outage gaps and unavailable-value thresholds.');

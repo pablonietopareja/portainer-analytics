@@ -1,0 +1,20 @@
+{
+  "name": "portainer-analytics",
+  "version": "0.1.0-alpha.3",
+  "private": true,
+  "description": "Development checks for the Portainer Analytics web interface",
+  "engines": {
+    "node": "^22.22.2 || ^24.15.0 || >=26.0.0"
+  },
+  "scripts": {
+    "check": "node tests/check_js.cjs",
+    "test": "node tests/charts.test.cjs && node tests/ui_smoke.cjs",
+    "test:browser": "node tests/first_run_browser.cjs && node tests/browser_smoke.cjs",
+    "browser:install": "playwright install chromium"
+  },
+  "devDependencies": {
+    "jsdom": "30.1.2",
+    "playwright": "1.64.0"
+  },
+  "license": "MIT"
+}

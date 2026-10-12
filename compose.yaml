@@ -1,0 +1,23 @@
+services:
+  portainer-analytics:
+    build: .
+    image: portainer-analytics:alpha-3
+    pull_policy: never
+    restart: unless-stopped
+    ports:
+      - "8082:8082"
+    environment:
+      CONSOLE_PUBLIC_URL: "${CONSOLE_PUBLIC_URL:-}"
+      CONSOLE_ALLOWED_HOSTS: "${CONSOLE_ALLOWED_HOSTS:-}"
+    volumes:
+      - analytics-data:/data
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    stop_grace_period: 45s
+volumes:
+  analytics-data:
