@@ -3,47 +3,75 @@
 - **Target version:** `1.0.0`
 - **Review date:** 2026-10-13
 - **Repository:** [pablonietopareja/portainer-analytics](https://github.com/pablonietopareja/portainer-analytics)
-- **Source under review:** local 1.0.0 working-tree changes based on `dcff77cacec7b88481fd7754d8f4a76d28ba223c`
-- **Remote verification of these changes:** **PENDING**
+- **Published 1.0.0 candidate:** `4890c05cee15a3d24e34d4c8dd5da24bd39c3612`
+- **Source under review:** local Windows release-path remediation based on that candidate
+- **Remote verification of the remediation:** **PENDING REMOTE CI**
 
-This is a maintainer verification record, not independent third-party certification. Local working-tree results apply to the reviewed files, not to an unpublished commit or tag. A final commit must complete its own CI run before historical results can be supplemented with new revision-specific evidence.
+This is a maintainer verification record, not independent third-party certification. Local working-tree results apply to the reviewed files. The remediation has no remote result yet: its final commit must complete its own CI run before the record can be supplemented with revision-specific evidence.
 
 ## Historical CI evidence
 
-[GitHub Actions run 38371715631](https://github.com/pablonietopareja/portainer-analytics/actions/runs/38371715631) completed successfully for source revision `dcff77cacec7b88481fd7754d8f4a76d28ba223c`. Its four jobs cover Ubuntu and Windows source checks, plus native Linux AMD64 and ARM64 container acceptance. This evidence predates the 1.0.0 working-tree changes and does **not** verify them.
+[GitHub Actions run 38438590497](https://github.com/pablonietopareja/portainer-analytics/actions/runs/38438590497) completed with **FAILURE** for published source revision `4890c05cee15a3d24e34d4c8dd5da24bd39c3612`. The run SHA, job outcomes and Windows step statuses were checked through the GitHub API.
+
+| Job | Recorded result | Scope |
+| --- | --- | --- |
+| `checks (ubuntu-24.04)` | **PASS** | All configured Linux source, frontend, packaging and security checks |
+| `checks (windows-2025)` | **FAIL** | Python setup and Ruff passed; the unit-test step failed in release packaging regressions |
+| `docker (ubuntu-24.04)` | **PASS** | Native Linux AMD64 build and isolated container acceptance |
+| `docker (ubuntu-24.04-arm)` | **PASS** | Native Linux ARM64 build and isolated container acceptance |
+
+After the Windows unit-test failure, JavaScript syntax, frontend unit tests, browser acceptance, source verification, release packaging, Bandit, pip-audit and npm audit were **SKIPPED** on that runner. They are neither passes nor failures there. The two native container jobs succeeded; the recorded Windows source failure is not a Docker runtime failure.
+
+[GitHub Actions run 38371715631](https://github.com/pablonietopareja/portainer-analytics/actions/runs/38371715631) completed successfully for earlier source revision `dcff77cacec7b88481fd7754d8f4a76d28ba223c`. Its four jobs cover Ubuntu and Windows source checks, plus native Linux AMD64 and ARM64 container acceptance. Neither historical run verifies the new local remediation.
 
 The source-check pipeline includes locked dependency installs, Python lint/format/tests, JavaScript and browser tests, source/release verification, deterministic packaging, Bandit, pip-audit and npm audit. Container jobs build and start isolated, unconfigured application instances and check non-root operation, the read-only root filesystem, anonymous management denial and restart persistence.
 
-## Current verification
+## Windows release-path remediation
 
-The following results record checks of the local 1.0.0 files. `NOT RUN` is not a passing result. Remote jobs remain pending until the final reviewed revision is committed and its workflow completes.
+The archive reader compared a resolved child path against an unresolved root. A local Windows NTFS junction reproduced both reported errors: an existing `.dockerignore` was rejected, and a synthetic credential fixture was rejected as a missing file before content validation. The resolved files were contained by the canonical root but not by the lexical alias. The exact temporary-directory alias on the hosted Windows runner was not diagnosed directly and remains unverified.
+
+The reader now canonicalizes the root once and compares canonical child paths against that root. Strict archive-name validation remains in place and explicitly rejects POSIX absolute names, Windows drive-qualified names, backslashes, empty path components and traversal. It still rejects missing files, leaf symlinks, resolved parent-link escapes and credential-like content. Existing archive-content, metadata, checksum and reproducibility assertions are preserved. Two new regressions cover noncanonical roots and linked roots with an escaping child; Windows runs real NTFS junction fixtures, while the Linux branch uses directory and file symlinks.
+
+## Local verification
+
+The following results record checks of the local remediation on Windows with Python 3.14.6. `NOT RUN` is not a passing result. New remote jobs remain pending until the final reviewed remediation is committed and its workflow completes.
 
 | Check | Status | Evidence and scope |
 | --- | --- | --- |
 | Python syntax | **PASS** | `python -m compileall -q`, covering runtime, scripts and tests |
 | Ruff lint and formatting | **PASS** | Ruff 0.17.0: `python -m ruff check .` and `python -m ruff format --check .`; 24 files reported as correctly formatted |
-| Full Python regression suite | **PASS** | `python -m unittest discover -s tests`; 102 tests passed, covering synthetic telemetry, setup, authentication, CSRF, sessions, persistence, API behavior and release regressions |
+| Focused release regression suite | **PASS** | `python -m unittest discover -s tests -p test_release.py -v`; all 6 tests passed in 0.982 seconds, no skips; includes real Windows NTFS junction acceptance and escape rejection |
+| Full Python regression suite | **PASS** | `python -m unittest discover -s tests -v`; all 104 tests passed in 25.289 seconds, no skips; covers synthetic telemetry, setup, authentication, CSRF, sessions, persistence, API behavior and release regressions |
+| Independent Windows path diagnostic | **PASS** | 4 valid file reads, 2 synthetic credential detections and 22 unsafe-path rejections; no fixture values printed |
 | Locked Node install and JavaScript checks | **PASS** | `npm ci --ignore-scripts` and `npm run check`; development dependencies and frontend syntax |
 | Frontend unit/DOM tests | **PASS** | `npm test`; synthetic interface behavior and charts |
 | Chromium acceptance | **PASS** | `npm run test:browser`; isolated test services, not live Portainer |
 | Both Compose manifests | **PASS** | Compose CLI 5.6.0: `config --quiet` for both manifests; no daemon required |
-| Source verifier and local documentation links | **PASS** | `python scripts/verify_release.py`; 65 intended source files, assets and release policies; all 47 local links/anchors resolve |
-| Deterministic source ZIP and build-context tar | **PASS** | `python scripts/build_release.py` run twice; 65 source ZIP files and 23 Docker-context files; exact payloads and SHA-256 checksums verified, byte-identical repeated builds |
+| Source verifier and documentation links | **PASS** | `python scripts/verify_release.py`; 65 intended source files, assets and release policies; all 47 local links/anchors resolve; all 22 unique external Markdown targets returned HTTP 200 |
+| Deterministic archives and regressions | **PASS** | Focused fixtures and two builds from an isolated 65-file source snapshot passed; ZIP/TAR payloads, timestamps, modes, exclusions and SHA-256 checksums verified; repeated archives and checksum files were byte-identical, with 23 Docker-context files |
 | Version agreement and runtime health/version | **PASS** | Release regression tests and `scripts/verify_release.py` check `1.0.0` metadata, image tags and names; native Python CLI startup and `/api/health`/`/api/session` report `1.0.0` |
 | Native Python restart and persistence | **PASS** | Two disposable local starts, no configured Portainer connection; health succeeds, anonymous snapshot access returns 401 and a SQLite marker survives restart |
-| Python dependency advisory checks | **PASS** | pip-audit 2.10.1: `python -m pip_audit -r requirements-dev.txt --no-deps --disable-pip`; no known vulnerabilities in the combined locked dependency set |
+| Python dependency advisory checks | **PASS** | pip-audit 2.10.1: `python -m pip_audit -r requirements-dev.txt --no-deps --disable-pip`; no known vulnerabilities in the combined locked dependency set; `python -m pip check` passed |
 | npm dependency advisory check | **PASS** | `npm audit --audit-level=moderate`; zero reported vulnerabilities in locked development packages |
 | Bandit runtime static analysis | **PASS** | Bandit 1.9.4: configured runtime `-ll` scan; zero findings at the selected severity/confidence threshold |
 | Current-source secret scan | **PASS** | Gitleaks 8.30.1 scanned the 65-file source snapshot; zero leaks detected; not a guarantee of complete detection |
-| Git history secret review | **PASS** | Gitleaks 8.30.1 scanned all four local commits with `git --all`; no leaks detected; history retained |
-| Screenshot privacy and rendered UI review | **PASS** | Four updated screenshots captured from the rendered 1.0.0 interface with strictly synthetic data and visually inspected |
+| Git history secret review | **PASS** | Gitleaks 8.30.1 scanned all five local commits with `git --all`; no leaks detected; history retained |
+| Screenshot privacy review | **PASS** | All four tracked 2020 x 1110 screenshots visually rechecked: synthetic interface data, no credentials or private infrastructure identifiers, no embedded text or EXIF metadata |
 | Final whitespace and current release-reference sweep | **PASS** | `git diff --check`; exhaustive case-insensitive checks found zero old release-label matches in current source text and filenames; separate visual screenshot review passed |
 | Local disposable Docker acceptance | **NOT RUN** | No Docker Engine/daemon is available locally; standalone Compose validation cannot verify container behavior |
 | Local native ARM64 acceptance | **NOT RUN** | No native ARM64 runner is available locally; cross-building is not native acceptance |
-| New Ubuntu/Windows source CI | **PENDING REMOTE CI** | Final 1.0.0 revision has not completed a remote run |
+| Local Linux source suite | **NOT RUN** | No installed WSL Linux distribution is available; the historical Ubuntu pass covers the published candidate, not the remediation |
+| Local Windows file/parent symlink fixtures | **NOT RUN** | Creating symlinks requires unavailable privileges; real NTFS junction cases ran, and the POSIX symlink cases must execute in the new Linux CI |
+| New Ubuntu/Windows source CI | **PENDING REMOTE CI** | Final remediation revision has not completed a remote run |
 | New native AMD64/ARM64 container CI | **PENDING REMOTE CI** | Historical passing jobs cannot qualify new changes |
 | Exact-version live Portainer integration | **NOT RUN** | Must use a separately authorized test environment |
 | Built-image OS advisory and complete license scan | **NOT RUN** | No local built image/daemon is available; Python/npm audits and source notices do not cover the full image |
+
+## Public tracked-file review
+
+All 65 tracked files were reviewed: 61 UTF-8 text files and the four screenshots. No additional public files need deletion. Tests, archive builders, CI, contributor and security guides, licensing notices, the runtime SBOM and deployment instructions are intentional public project content. The source tree has no tracked operational database, private key, backup or real credential file; documentation contains no personal workstation paths, internal publication instructions or conversational residues. Current source text and filenames contain no obsolete release label.
+
+Local virtual environments, dependencies, caches, `build/`, `dist/`, `.env`, databases and backups are excluded by `.gitignore`; the Docker context uses an explicit allowlist. These exclusions do not prevent an intentional forced Git add. Review tracked paths and stage only the expected correction files. The public tree remains the same 65-file structure, with no additions, deletions or renames.
 
 ## Release content and operational boundaries
 
@@ -55,7 +83,7 @@ The supplied Docker Compose and Docker Standalone stack manifests publish to hos
 
 The runtime uses salted scrypt password hashes, cookie sessions and CSRF checks for management. Portainer API tokens are stored **without application-level encryption**. Dashboard share URLs are bearer credentials. Secure cookies require the actual HTTPS origin in `CONSOLE_PUBLIC_URL`; the built-in server does not terminate TLS.
 
-Local validation uses Python 3.14.6, Node.js 24.18.0, npm 11.16.0 and Chromium through Playwright 1.64.0. Container security settings are inspected in source and were exercised by historical CI; they have not been run locally for the changed release because no Docker daemon is available.
+Local validation uses Python 3.14.6, Node.js 24.18.0, npm 11.16.0 and Chromium 156.0.8078.4 through Playwright 1.64.0. Container security settings were exercised by the published candidate's native AMD64 and ARM64 CI jobs; they have not been run locally for the remediation because no Docker daemon is available.
 
 Archive reproducibility was checked for identical source bytes with the same Python/compression toolchain. Fixed ZIP Unix metadata, timestamps, file modes and LF checksum output remove those platform differences; byte identity across different compression-library versions has not been established. Rebuild and verify checksums after any source change, including changes to this record.
 
@@ -69,4 +97,4 @@ The [runtime CycloneDX SBOM](docs/sbom-runtime.cdx.json) lists only the five loc
 
 See [Deployment](docs/DEPLOYMENT.md), [Security](SECURITY.md) and [Contributing](CONTRIBUTING.md) for installation, safeguards and reproducible verification commands.
 
-**Release disposition:** Remote acceptance of the final 1.0.0 revision is pending. This record does not claim that a GitHub release, tag or registry image has been published.
+**Release disposition:** Published candidate `4890c05cee15a3d24e34d4c8dd5da24bd39c3612` failed Windows source CI. Local remediation checks passed as recorded above; all four jobs must run again for its final commit. This record does not claim that a GitHub release, tag or registry image has been published.

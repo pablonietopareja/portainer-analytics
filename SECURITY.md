@@ -28,6 +28,6 @@ Public screenshots use synthetic fixtures. When documenting another installation
 
 ## Dependencies and verification
 
-Install Python packages from locked, hash-verified requirements. CI checks source behavior, application dependencies and static Python security; separate jobs build and test containers on native AMD64 and ARM64 Linux runners. Remote results for the 1.0.0 changes remain pending until their final source revision completes CI.
+Install Python packages from locked, hash-verified requirements. CI checks source behavior, application dependencies and static Python security; separate jobs build and test containers on native AMD64 and ARM64 Linux runners. The published 1.0.0 candidate passed Ubuntu source checks and both container jobs, while the Windows source job failed in release-path regression tests. Remote verification of the remediation remains pending until its final source revision completes CI.
 
 Dependency scans do not inspect all container OS packages or guarantee the absence of vulnerabilities. Keep pinned base images updated deliberately, scan the actual built image before redistribution and preserve installed dependency notices. See the revision-specific [verification record](RELEASE_AUDIT.md), [deployment guide](docs/DEPLOYMENT.md) and [third-party notices](THIRD_PARTY_NOTICES.md).

@@ -6,6 +6,7 @@ import contextlib
 import hashlib
 import io
 import json
+import os
 import subprocess
 import sys
 import tarfile
@@ -129,12 +130,103 @@ class ReleaseTests(unittest.TestCase):
             (root / "VERSION").write_text("1.0.0\n", encoding="utf-8")
             (root / "nested").mkdir()
             with mock.patch.object(build_release, "ROOT", root):
-                for name in ("nested/../VERSION", "../VERSION", "nested\\..\\VERSION"):
+                for name in (
+                    "../outside",
+                    "nested/../VERSION",
+                    "../VERSION",
+                    "nested\\..\\VERSION",
+                    "C:/VERSION",
+                    "C:VERSION",
+                    "C:\\VERSION",
+                    "/VERSION",
+                    "//server/share/VERSION",
+                    "\\\\server\\share\\VERSION",
+                    "",
+                    "./VERSION",
+                    "nested//VERSION",
+                    "nested/VERSION/",
+                    "missing.txt",
+                ):
                     with self.subTest(path=name), self.assertRaises(ValueError):
                         build_release.read_files([name])
                 (root / "secret.txt").write_text("ptr_" + "X" * 36, encoding="utf-8")
                 with self.assertRaisesRegex(ValueError, "Credential-like content"):
                     build_release.read_files(["secret.txt"])
+
+    def test_noncanonical_root_accepts_nested_files_and_checks_credentials(self):
+        with tempfile.TemporaryDirectory(prefix="portainer-release-root-") as directory:
+            root = Path(directory)
+            (root / "alias-component").mkdir()
+            (root / "nested").mkdir()
+            (root / ".dockerignore").write_bytes(b"synthetic fixture\n")
+            (root / "nested" / "ordinary.txt").write_bytes(b"nested fixture\n")
+            (root / "secret.txt").write_text("ptr_" + "X" * 36, encoding="utf-8")
+            noncanonical = root / "alias-component" / ".."
+            with mock.patch.object(build_release, "ROOT", noncanonical):
+                self.assertEqual(
+                    build_release.read_files([".dockerignore", "nested/ordinary.txt"]),
+                    {
+                        ".dockerignore": b"synthetic fixture\n",
+                        "nested/ordinary.txt": b"nested fixture\n",
+                    },
+                )
+                with self.assertRaisesRegex(ValueError, "Credential-like content"):
+                    build_release.read_files(["secret.txt"])
+
+    def test_linked_root_accepts_files_but_rejects_link_escape(self):
+        with tempfile.TemporaryDirectory(prefix="portainer-release-junction-") as directory:
+            base = Path(directory)
+            root, outside = base / "root", base / "outside"
+            root.mkdir()
+            outside.mkdir()
+            (root / ".dockerignore").write_bytes(b"synthetic fixture\n")
+            (root / "nested").mkdir()
+            (root / "nested" / "ordinary.txt").write_bytes(b"nested fixture\n")
+            (root / "secret.txt").write_text("ptr_" + "X" * 36, encoding="utf-8")
+            (outside / "ordinary.txt").write_bytes(b"outside fixture\n")
+            alias, escape = base / "root-alias", root / "escape"
+            links = []
+            try:
+                for link, target in ((alias, root), (escape, outside)):
+                    if os.name == "nt":
+                        # Junctions exercise Windows aliases without symlink privileges.
+                        result = subprocess.run(
+                            ["cmd", "/c", "mklink", "/J", str(link), str(target)],
+                            capture_output=True,
+                            timeout=15,
+                        )
+                        self.assertEqual(
+                            result.returncode, 0, "Could not create the NTFS junction test fixture"
+                        )
+                    else:
+                        link.symlink_to(target, target_is_directory=True)
+                    links.append(link)
+                self.assertNotEqual(alias, alias.resolve())
+                with mock.patch.object(build_release, "ROOT", alias):
+                    self.assertEqual(
+                        build_release.read_files([".dockerignore", "nested/ordinary.txt"]),
+                        {
+                            ".dockerignore": b"synthetic fixture\n",
+                            "nested/ordinary.txt": b"nested fixture\n",
+                        },
+                    )
+                    with self.assertRaisesRegex(ValueError, "Credential-like content"):
+                        build_release.read_files(["secret.txt"])
+                    with self.assertRaisesRegex(ValueError, "Invalid or missing release file"):
+                        build_release.read_files(["escape/ordinary.txt"])
+                    if os.name != "nt":
+                        file_link = root / "file-link.txt"
+                        file_link.symlink_to(root / ".dockerignore")
+                        links.append(file_link)
+                        with self.assertRaisesRegex(ValueError, "Invalid or missing release file"):
+                            build_release.read_files(["file-link.txt"])
+            finally:
+                # Remove only link entries, never their target directories.
+                for link in reversed(links):
+                    if os.name == "nt":
+                        link.rmdir()
+                    else:
+                        link.unlink()
 
 
 if __name__ == "__main__":

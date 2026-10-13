@@ -8,7 +8,7 @@ import io
 import re
 import tarfile
 import zipfile
-from pathlib import Path
+from pathlib import Path, PurePosixPath, PureWindowsPath
 
 ROOT = Path(__file__).resolve().parents[1]
 RUNTIME = (
@@ -72,17 +72,19 @@ def source_files():
 
 
 def read_files(names):
+    root = ROOT.resolve()
     result = {}
     for name in names:
-        source = ROOT / name
         if (
-            name != source.relative_to(ROOT).as_posix()
-            or any(part in (".", "..") for part in name.split("/"))
+            not name
+            or PurePosixPath(name).is_absolute()
+            or PureWindowsPath(name).drive
+            or any(part in ("", ".", "..") for part in name.split("/"))
             or "\\" in name
-            or source.is_symlink()
-            or not source.resolve().is_relative_to(ROOT)
-            or not source.is_file()
         ):
+            raise ValueError(f"Invalid or missing release file: {name}")
+        source = root / name
+        if source.is_symlink() or not source.resolve().is_relative_to(root) or not source.is_file():
             raise ValueError(f"Invalid or missing release file: {name}")
         data = source.read_bytes()
         if re.search(
