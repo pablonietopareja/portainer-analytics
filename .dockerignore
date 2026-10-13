@@ -2,6 +2,8 @@
 !Dockerfile
 !requirements.txt
 !VERSION
+!LICENSE
+!THIRD_PARTY_NOTICES.md
 !portainer_console.py
 !engine.py
 !persistence.py

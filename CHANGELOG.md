@@ -1,30 +1,24 @@
 # Changelog
 
-## alpha.3 — 2026-10-12
+## 1.0.0 - 2026-10-13
 
-This is the first standalone public alpha source release of Portainer Analytics. I consolidated the existing `alpha.2` console into a distributable project and aligned local development, automated tests and container deployment around the same application.
+This source revision prepares Portainer Analytics 1.0.0. GitHub release publication is separate from source preparation; final remote CI evidence is pending in [RELEASE_AUDIT.md](RELEASE_AUDIT.md).
 
-### Application
+### Release consistency
 
-- Kept the environment overview, container and stack inventory, charts, metric selection, dashboard editor, saved layouts and read-only dashboard sharing.
-- Standardized the initial administrator setup and sign-in workflow for Python and Docker installations.
-- Added light, dark and system themes, along with responsive dashboard and navigation behavior.
-- Standardized the application listening port to `8082`.
+- Align runtime responses, package metadata, Docker labels and deployment image tags with `1.0.0`.
+- Produce deterministic `portainer-analytics-1.0.0-source.zip` and `portainer-analytics-1.0.0-build-context.tar` artifacts.
+- Use descriptive UI assets and integration-test names, with regression coverage for version agreement and packaging.
+- Show the actual browser port in the interface, including customized published ports.
+- Refresh public documentation and screenshots with synthetic test data.
 
-### Reliability and security
+### Deployment and security
 
-- Removed inherited parent-directory credential loading and the duplicate unauthenticated entry point.
-- Bounded HTTP handlers, session count, request sizes and socket idle time; hardened session and CSRF handling.
-- Replaced dynamic SQL identifier interpolation with explicit query paths.
-- Added hash-locked Python requirements, pinned development dependencies and maintained third-party license notices.
+- Publish the supplied Compose and Docker Standalone stack services on host loopback by default.
+- Document deliberate LAN exposure, secure first-use access, reverse-proxy configuration and preservation of the existing data volume.
+- Browser-local theme preferences may return to the system default; reselect the preferred theme after upgrading. Saved dashboard data remains in the existing volume.
+- Preserve non-root execution, read-only container filesystems, capability restrictions, healthchecks, authenticated management and read-only Portainer access.
 
-### Packaging and validation
+### Existing capabilities retained
 
-- Added a multi-stage, non-root Dockerfile, persistent-volume Compose definitions, a healthcheck and isolated container acceptance tests.
-- Added automated Python, JavaScript, DOM and Chromium tests with synthetic Portainer fixtures.
-- Added GitHub Actions checks on Windows and Linux plus native Docker acceptance on AMD64 and ARM64.
-- Added deterministic source and Docker-context packaging scripts, documentation and the MIT License.
-
-**Verification update — 2026-10-13:** All four GitHub Actions matrix jobs completed successfully, including both native container acceptance jobs. See [RELEASE_AUDIT.md](RELEASE_AUDIT.md) for exactly what they cover and what still requires live-deployment qualification.
-
-The repository's interface screenshots illustrate a running installation. Earlier development iterations are not represented as separately published releases.
+Environment discovery, container/resource inventory, telemetry, dashboard editing and sharing, selected-metric history, three display themes and first-use administrator setup remain available. Earlier development changes remain in Git history rather than being presented as separately published releases.

@@ -1,28 +1,33 @@
 # Security policy and deployment guidance
 
-Portainer Analytics is an alpha-stage, read-only console intended for controlled networks. I maintain the project on a best-effort basis and do not offer a contractual response time, security SLA or certification.
+Portainer Analytics 1.0.0 is a read-only operations console for controlled deployments. Maintenance is provided on a best-effort basis, without a contractual response time, security SLA or certification.
 
 ## Report a vulnerability
 
-Use **Security → Report a vulnerability** in this GitHub repository if private vulnerability reporting is enabled. If that option is unavailable, open a minimal public issue requesting a private contact channel. Do not publish exploit instructions, credentials, internal hostnames, access URLs or customer data in an issue.
+Use **Security > Report a vulnerability** in this GitHub repository if private reporting is enabled. If unavailable, open a minimal public issue requesting a private contact channel. Do not publish exploit instructions, credentials, internal hostnames, access URLs or customer data in an issue.
 
-A useful report includes the affected commit or version, impact, a synthetic reproduction and the expected versus observed behavior. Do not use a production Docker environment to prove an exploit.
+Include the affected commit or version, impact and a synthetic reproduction with expected and observed behavior. Do not use a production Docker environment to demonstrate an exploit.
 
 ## Security model
 
-- **Read-only monitoring:** the Portainer API client is designed to query environment data, not to create or modify Docker resources. The service does not require a Docker socket, privileged container, host mount or Portainer write endpoint.
-- **First-use setup:** an empty workspace must be claimed by its first administrator. Complete this step on a controlled network before allowing broader access.
-- **Credentials:** use a dedicated Portainer API token with the least read permissions your environment supports. Restrict network egress where possible.
-- **Local persistence:** SQLite stores Portainer tokens, password hashes, dashboards and sharing capabilities. Passwords use salted scrypt; **API tokens do not have application-level encryption**. Protect `/data` and backups.
-- **Sessions:** management routes require authenticated sessions and CSRF validation. Public dashboard links are separate bearer credentials that can be revoked.
-- **Transport:** TLS certificate verification for Portainer is enabled by default. For external access, terminate HTTPS at a reverse proxy, preserve the external Host header and configure `CONSOLE_PUBLIC_URL` so cookies use `Secure`.
+- **Read-only monitoring:** the Portainer Server API client queries data and does not create or modify managed Docker resources. It requires no Docker socket, privileged container or host mount.
+- **First-use setup:** an empty workspace can be claimed by its first administrator. Default Docker publication is host loopback. Complete setup locally or through a secure tunnel before enabling LAN or wider access. Other containers sharing the application network can still reach its internal listener.
+- **Credentials:** use a dedicated Portainer API token with the least read permissions supported by your environment. Restrict egress and upstream access where possible. The application being read-only does not reduce the permissions of an overprivileged token.
+- **Persistence:** SQLite stores Portainer tokens, salted scrypt password hashes, dashboards, history and share capabilities. **API tokens have no application-level encryption.** Restrict access to `/data`, local data directories and backups.
+- **Sessions:** authenticated management uses HttpOnly, SameSite=Strict cookies and CSRF validation. Administrator sessions expire after eight hours and are revoked on logout or server restart. Setup sessions expire after 15 minutes. Do not rely on Host-header validation as network access control.
+- **Transport:** Portainer TLS verification is enabled by default. Keep it enabled with appropriate certificate trust. For remote browser access, terminate HTTPS at a reverse proxy, preserve Host and configure the actual HTTPS `CONSOLE_PUBLIC_URL` to enable Secure cookies. Forwarded headers alone do not determine cookie security.
+- **Sharing:** active dashboard links are bearer credentials granting read access to selected data. Treat links as sensitive and revoke or rotate them when access should end.
 - **Operational content:** upstream labels, logs and errors may contain sensitive values. Pattern-based redaction is a safeguard, not comprehensive data-loss prevention.
-- **Exposure:** HTTP concurrency, session limits and socket timeouts reduce accidental overload; the built-in HTTP listener should not be exposed directly as an Internet-facing gateway.
+- **Exposure:** concurrency limits, bounded sessions/request sizes and socket timeouts reduce overload risk. Place access controls and rate limits at ingress; do not expose the built-in HTTP listener directly as an Internet gateway.
 
-Public interface screenshots in the README are illustrative. Before replacing them with screenshots from a different installation, check browser address bars, endpoint names, container names and metric labels for information that should not be disclosed.
+The supplied Portainer stack targets Docker Standalone. Docker Swarm published ports have different semantics; do not assume its host-loopback restriction applies in Swarm.
 
-## Dependencies and release validation
+Use Docker Engine 28.0.0 or newer for localhost publication isolation. Earlier versions can expose those ports to hosts on the same layer-2 network, and custom direct routing needs separate access controls. Review [Docker's network guidance](https://docs.docker.com/engine/network/port-publishing/) and the deployment host's actual configuration.
 
-Install Python packages from the locked, hash-verified manifests. CI checks source behavior, dependencies and static Python security, and builds/test-runs containers on native AMD64 and ARM64 Linux runners. These results do not constitute a comprehensive penetration test or OS-level vulnerability scan of a distributable image.
+Public screenshots use synthetic fixtures. When documenting another installation, review environment names, container inventories, metric labels, tokens and operational details before publication.
 
-Keep the pinned base image updated deliberately, review OS package advisories before distributing built images, and retain the installed dependency license files. Refer to [RELEASE_AUDIT.md](RELEASE_AUDIT.md), [DEPLOYMENT.md](docs/DEPLOYMENT.md) and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for the current boundaries and procedures.
+## Dependencies and verification
+
+Install Python packages from locked, hash-verified requirements. CI checks source behavior, application dependencies and static Python security; separate jobs build and test containers on native AMD64 and ARM64 Linux runners. Remote results for the 1.0.0 changes remain pending until their final source revision completes CI.
+
+Dependency scans do not inspect all container OS packages or guarantee the absence of vulnerabilities. Keep pinned base images updated deliberately, scan the actual built image before redistribution and preserve installed dependency notices. See the revision-specific [verification record](RELEASE_AUDIT.md), [deployment guide](docs/DEPLOYMENT.md) and [third-party notices](THIRD_PARTY_NOTICES.md).

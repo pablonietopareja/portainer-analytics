@@ -21,6 +21,8 @@ async function main(){
  try{
   for(const f of ['theme.js','app.js','views.js','charts.js','settings.js','dashboards.js','controller.js'])run(dom,f);
   await waitFor(()=>w.eval('state.snapshot?.environments.length>0'),'initial snapshot');
+  assert.equal(w.document.querySelector('#workspace-port').textContent,':'+new URL(base).port,'sidebar shows the configured HTTP port');
+  assert.equal((await serverFetch('/console.css')).status,200,'renamed stylesheet is served');
   for(const view of ['overview','containers','stacks','images','storage','networks','events','system']){click(w,`[data-view="${view}"]`);assert.ok(w.document.querySelector('#content').textContent.length>100,view);}
   for(const mode of ['dark','light','system']){w.Theme.set(mode);assert.equal(w.document.documentElement.dataset.theme,mode==='system'?'light':mode);}
   click(w,'[data-view="settings"]');await waitFor(()=>w.document.querySelector('#portainer-url'),'settings form');
@@ -59,6 +61,9 @@ async function main(){
   w.document.querySelector('#widget-title').value='Renamed panel';w.document.querySelector('#widget-form').dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}));
   click(w,'[data-board-action="save"]');await waitFor(()=>w.eval('Dashboards.draft.revision===2')&&w.document.querySelector('[data-board-action="share"]'),'updated dashboard');saved=w.eval('structuredClone(Dashboards.draft)');
   assert.equal((await(await serverFetch('/api/dashboards/'+saved.id)).json()).widgets[0].title,'Renamed panel');
+  w.eval('showLogin(false)');
+  assert.equal(w.document.querySelector('#login-form p').textContent,'Administrator access is unavailable. Check the workspace configuration and server logs.');
+  assert.equal(w.document.querySelector('#login-password'),null,'unavailable administrator access cannot offer a login form');
   assert.equal(errors.length,0,errors.map(String).join('\n'));
   console.log('PASS: all original views, 3 themes, settings draft preservation, no token readback, no-code panels, reorder/undo, save/edit and scoped share (DOM emulation).');
  }finally{

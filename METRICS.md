@@ -1,4 +1,4 @@
-# Metrics reference — alpha.3
+# Metrics reference
 
 Portainer Analytics reads Docker telemetry and inventory through the Portainer server API. It does not execute commands on the host or modify Docker resources. The default target interval is 5 seconds for container stats, approximately 30 seconds for inventory and 60 seconds for storage and optional Portainer Agent capabilities. Actual collection depends on upstream latency and API permissions.
 
@@ -17,7 +17,7 @@ The UI shows only fields that the available Docker/Portainer API actually return
 
 ## Native Docker metric discovery
 
-Alongside normalized measures, I expose a bounded catalog of numeric fields returned under Docker stats objects such as `cpu_stats`, `precpu_stats`, `memory_stats`, `pids_stats`, `networks`, `blkio_stats`, `storage_stats` and `num_procs`. The **Container → Resources → Advanced** view and dashboard metric selector can surface these additional values.
+Alongside normalized measures, the application exposes a bounded catalog of numeric fields returned under Docker stats objects such as `cpu_stats`, `precpu_stats`, `memory_stats`, `pids_stats`, `networks`, `blkio_stats`, `storage_stats` and `num_procs`. The **Container > Resources > Advanced** view and dashboard metric selector can surface these additional values.
 
 Native fields keep their original API units. CPU time units differ between Linux and Windows; normalized CPU-time metrics convert them to seconds. Numeric discovery is limited to 512 leaves per container, depth 10 and 4096 visited nodes to protect smaller edge gateways. Array positions and optional paths may change between Engine versions or samples.
 
@@ -35,6 +35,8 @@ Native fields keep their original API units. CPU time units differ between Linux
 ## History and retention
 
 Recent normalized measurements are buffered in memory. Only metrics referenced by saved dashboards are written to SQLite, with a rolling **24-hour** history window. Raw metric history begins when that metric is selected in a saved dashboard. Gaps remain gaps in charts; the system does not invent samples to make a curve continuous.
+
+Dashboard refresh choices of 5, 10, 30 or 60 seconds control frontend updates; they do not change the backend sampling interval. Recent in-memory history is bounded to 180 samples per resource, and plotted series are reduced to about 360 points while retaining the latest sample and outage markers. Historical chart range does not imply that every metric has samples for the entire selected period.
 
 This approach controls writes to edge storage, but it is not intended as a long-term monitoring database or full observability backend. Saved dashboards accept up to 64 panels with up to 16 selected sources per panel.
 

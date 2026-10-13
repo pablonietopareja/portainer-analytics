@@ -2,7 +2,7 @@
 const fs=require('node:fs'),os=require('node:os'),path=require('node:path'),assert=require('node:assert/strict');
 const {chromium}=require('playwright');
 const {createFixture,browserOptions}=require('./fixture.cjs');
-const output=fs.mkdtempSync(path.join(os.tmpdir(),'portainer-alpha-browser-'));
+const output=fs.mkdtempSync(path.join(os.tmpdir(),'portainer-console-browser-'));
 async function main(){
  const fixture=await createFixture(),base=fixture.base;
  let browser;

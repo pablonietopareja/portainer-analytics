@@ -1,78 +1,69 @@
 # Portainer Analytics
 
-**A read-only operations console for Docker environments managed through Portainer.**
+**Read-only Docker inventory, telemetry and dashboards through the Portainer Server API.**
 
-I built Portainer Analytics to bring environment discovery, container telemetry and configurable dashboards into one lightweight interface. It is designed for industrial edge gateways, lab systems and small Docker installations where I want useful operational data without deploying a full monitoring stack.
+Portainer Analytics brings environment discovery, container metrics and configurable dashboards into one lightweight application. It is intended for edge gateways, labs and small Docker installations. **Portainer Analytics** is the project name; **Edge Console** is the interface branding.
 
 [![CI](https://github.com/pablonietopareja/portainer-analytics/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/pablonietopareja/portainer-analytics/actions/workflows/ci.yml)
-![Release](https://img.shields.io/badge/release-alpha.3-blue)
-![Platforms](https://img.shields.io/badge/Docker-AMD64%20%7C%20ARM64-informational)
+![Version](https://img.shields.io/badge/version-1.0.0-blue)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-> **Independent project.** Portainer Analytics uses the Portainer API; it is not an official Portainer product or affiliated with Portainer.
+> Independent project. Portainer Analytics uses the Portainer API; it is not an official Portainer product and is not affiliated with Portainer.
 
 ## The console at a glance
 
-![Portainer Analytics — live infrastructure overview](imgs/portainer-analytics_UI_overview.png)
+![Portainer Analytics environment overview](imgs/portainer-analytics_UI_overview.png)
 
-*Live environment overview: container inventory, CPU, memory, network traffic, resource history and Docker storage.*
+*Environment overview: inventory, container CPU and memory, network traffic, recent history and Docker storage.*
 
-### What it looks like
+**Custom dashboards** combine charts, metric cards, gauges, comparisons and tables. Save layouts, choose time ranges and refresh rates, and share selected dashboards through revocable read-only links.
 
-**Custom dashboards** — combine live and historical metrics in configurable panels, choose time ranges and refresh rates, and share selected dashboards through revocable read-only links.
+![Portainer Analytics custom dashboard](imgs/portainer-analytics_UI_dashboard.png)
 
-![Portainer Analytics — custom dashboard](imgs/portainer-analytics_UI_dashboard.png)
+**Container inventory** shows workloads, health and lifecycle state alongside available per-container telemetry.
 
-**Container inventory** — review workloads, health and lifecycle state alongside per-container CPU, RAM and network measurements.
+![Portainer Analytics container inventory](imgs/portainer-analytics_UI_containers.png)
 
-![Portainer Analytics — container inventory](imgs/portainer-analytics_UI_containers.png)
+**Administrator access** protects configuration and dashboard management. First-use setup creates the workspace and administrator credentials.
 
-**Administrator access** — a first-use setup creates the workspace and administrator credentials. Subsequent configuration and dashboard management require sign-in.
+![Portainer Analytics administrator sign-in](imgs/portainer-analytics_UI_access.png)
 
-![Portainer Analytics — administrator sign-in](imgs/portainer-analytics_UI_access.png)
+These screenshots are captured from the application using synthetic test data. Their values illustrate the interface; they are not benchmarks or evidence of compatibility with a particular production deployment.
 
-These images show the application running against a Portainer-managed environment. Values are point-in-time examples, not benchmark results or promises of universal metric availability. The displayed browser address belongs to a private LAN and is not a public demo endpoint.
+## Features and boundaries
 
-## What I built
+- Environment, container, stack, image, network and volume inventory, plus activity and system information.
+- Normalized CPU, memory, network, block I/O, lifecycle and storage measurements; bounded discovery of additional numeric Docker counters.
+- Dashboard editing, panel reordering, multiple sources per panel and up to 24 hours of selected-metric history.
+- Local administrator authentication, session and CSRF protection, persistent configuration and revocable dashboard sharing.
+- Python deployment or a non-root Docker container with a read-only root filesystem, persistent data volume and healthcheck.
 
-- **Environment overview:** discovered Docker environments, live counts, workload health, CPU and memory consumption, network traffic and Docker storage.
-- **Resource inventory:** containers, stacks, images, networks, volumes, activity and system information. Optional Swarm and Portainer Agent capabilities are shown when the API exposes them.
-- **Metrics:** normalized CPU, memory, network, block I/O, lifecycle and storage measurements, with additional numeric Docker counters available through bounded discovery. Unavailable values are not presented as zero.
-- **Custom dashboards:** time-series charts, metric cards, gauges, bar comparisons and tables; panel editing, reordering, multiple sources, saved configurations and up to 24 hours of selected-metric history.
-- **Controlled access:** local administrator authentication, session and CSRF protection, private persistence, and revocable read-only dashboard links.
-- **Deployment:** Python or a non-root Docker container with a read-only root filesystem, dedicated data volume and built-in healthcheck. No Docker socket mount is required.
-
-The console only reads Portainer/Docker data. It cannot start, stop, create, delete or modify Docker resources. Application configuration, dashboards and share links are written to its own SQLite database.
-
-## Architecture
+The console only queries the Portainer **Server API**. It cannot start, stop, create, delete or modify managed Docker resources, and it does not require a Docker socket mount. It writes its own configuration, dashboards, share links and history to SQLite. Optional Swarm and Portainer Agent information appears only when available through the server API; this does not imply that the supplied deployment stack supports Swarm.
 
 ```mermaid
 flowchart LR
-    A[Administrator browser] --> C[Portainer Analytics :8082]
+    A[Administrator browser] --> C[Portainer Analytics]
     V[Shared dashboard viewer] --> C
     C -->|Read-only API| P[Portainer Server]
     P --> E[Docker Engine / Portainer Agent]
     C --> D[(SQLite data volume)]
 ```
 
-The application consists of five Python runtime modules and a local HTML/CSS/JavaScript frontend. It has no CDN dependency, runtime Node.js dependency or third-party UI bundle. Its API client talks to the **Portainer server**, not directly to an Agent address.
+The runtime uses five Python modules and local HTML, CSS and JavaScript. There is no runtime Node.js requirement, CDN dependency or third-party UI bundle.
 
 ## Requirements and compatibility
 
 | Component | Requirement |
 | --- | --- |
-| Python | Python 3.14; locked production dependencies |
-| Docker | Linux Docker Engine with Compose v2 when deploying as a container |
-| Architecture | AMD64 and ARM64 container builds and isolated acceptance checks pass in CI |
-| Portainer | A reachable Portainer server API and a token authorized for the target Docker environments |
-| Browser | Modern JavaScript-capable browser; automated end-to-end coverage uses Chromium |
-| Development tools | Node.js for frontend tests only, not for running the console |
+| Python | Python 3.14 with locked production dependencies |
+| Containers | Linux Docker Engine and Compose v2; the supplied Portainer stack targets Docker Standalone |
+| Portainer | Reachable Portainer Server API and a token authorized to read the target Docker environments |
+| Browser | Modern JavaScript-capable browser; automated browser coverage uses Chromium |
+| Development | Node.js matching `package.json` for frontend tests only |
 
-GitHub Actions has passed its Windows/Linux test jobs and Docker acceptance jobs on AMD64 and ARM64. Those jobs exercise synthetic Portainer responses and isolated containers. They do **not** certify every live Portainer/Agent combination or perform a full container OS vulnerability scan. See [Release Audit](RELEASE_AUDIT.md).
+The CI workflow includes Windows/Linux source checks and native Linux AMD64/ARM64 container acceptance. A historical source revision passed all four jobs; **remote verification of the 1.0.0 changes is pending**. Synthetic tests do not establish compatibility with every Portainer Server, Agent or Edge configuration. See the revision-specific [verification record](RELEASE_AUDIT.md).
 
 ## Quick start: Docker Compose
-
-Clone the repository and start the service:
 
 ```sh
 git clone https://github.com/pablonietopareja/portainer-analytics.git
@@ -82,13 +73,17 @@ docker compose up -d --build
 docker compose ps
 ```
 
-Open **http://localhost:8082** (or `http://YOUR_GATEWAY_IP:8082` from another device on your trusted network). On the first visit, create an administrator password of at least 12 characters, enter the Portainer **server** URL and API token, then select **Test connection & create workspace**.
+Open **http://localhost:8082 on the Docker host**. The supplied Compose file publishes only on host loopback by default. On the first visit, create an administrator password of at least 12 characters, enter the Portainer **Server** URL and API token, then select **Test connection & create workspace**. Complete setup before enabling access from other devices.
 
-Use the same Docker volume across upgrades. A new volume means a new, empty workspace. Avoid exposing first-use setup to an untrusted network.
+Use Docker Engine 28.0.0 or newer for localhost publication isolation and review custom network routing. Older releases have a documented same-network exposure caveat; see [Deployment](docs/DEPLOYMENT.md).
+
+For deliberate LAN access, set `CONSOLE_BIND_ADDRESS` to the host's trusted LAN address in a local `.env` file and recreate the service. Use `0.0.0.0` only when firewall rules and access controls restrict all exposed interfaces. This setting changes the host port mapping, not the container listener. Reverse proxies in separate containers must reach the application through a shared Docker network. See [Deployment](docs/DEPLOYMENT.md) for remote setup, HTTPS and upgrade instructions.
+
+Keep the original data volume across upgrades. A new volume creates an empty workspace. The 1.0.0 manifests tighten the default host binding to loopback; existing LAN deployments must review the port mapping before updating.
 
 ### Run directly with Python
 
-On Windows PowerShell, from the repository root:
+From the repository root, on Windows PowerShell:
 
 ```powershell
 python -m venv .venv
@@ -96,7 +91,7 @@ python -m venv .venv
 .\.venv\Scripts\python.exe portainer_console.py
 ```
 
-On Linux, with Python 3.14 available:
+On Linux with Python 3.14:
 
 ```sh
 python3.14 -m venv .venv
@@ -104,34 +99,33 @@ python3.14 -m venv .venv
 .venv/bin/python portainer_console.py
 ```
 
-The local server binds to `127.0.0.1:8082` by default. Add `--host 0.0.0.0` if you deliberately need LAN access. Stop the process with `Ctrl+C`.
+The server binds to `127.0.0.1:8082` by default. Use `--host` and `--port` to change the listener deliberately. Stop it with `Ctrl+C`.
 
-### Deploy using the Portainer interface
+### Build and deploy through Portainer
 
-Portainer can build the supplied source context without requiring a remote image registry:
-
-1. Run `python scripts/build_release.py` to produce the Docker build-context tar.
-2. In Portainer, select the target Docker environment and open **Images > Build a new image > Upload**.
-3. Upload `dist/portainer-analytics-alpha-3-build-context.tar`; set image name `portainer-analytics:alpha-3` and Dockerfile path `Dockerfile`.
+1. Run `python scripts/build_release.py` to create the Docker build-context tar.
+2. In a Docker Standalone environment, open **Images > Build a new image > Upload**.
+3. Upload `dist/portainer-analytics-1.0.0-build-context.tar`, with image tag `portainer-analytics:1.0.0` and Dockerfile path `Dockerfile`.
 4. In the **same environment**, create a stack from `portainer-stack.yml` with image re-pulling disabled.
-5. Open port `8082` and complete the first-use setup.
+5. Access host loopback locally or through an SSH tunnel and complete setup. Deliberately edit the stack's published address when LAN access is required.
 
-The tar is a **build context**, not an image archive for **Images > Import**. For exact steps, troubleshooting and upgrade precautions, read [Deployment](docs/DEPLOYMENT.md).
+The tar is a **build context**, not an image archive for **Images > Import**. Full instructions are in [Deployment](docs/DEPLOYMENT.md).
 
 ## Configuration and persistence
 
-| Setting | Description | Default |
+| Setting | Purpose | Default |
 | --- | --- | --- |
-| `CONSOLE_HOST` | Listening address; `--host` takes precedence | `127.0.0.1` locally; `0.0.0.0` in Docker |
-| `CONSOLE_PORT` | HTTP port; `--port` takes precedence | `8082` |
-| `CONSOLE_DATA_DIR` | Persistent database directory | Local `data/`; `/data` in Docker |
-| `CONSOLE_PUBLIC_URL` | Public origin for dashboard links and HTTPS cookie behavior | Browser origin |
-| `CONSOLE_ALLOWED_HOSTS` | Additional allowed DNS hostnames | None |
-| `--interval` | Target container statistics sampling interval | 5 seconds (minimum 2) |
+| `CONSOLE_HOST` | Application listener; `--host` takes precedence | `127.0.0.1` locally, `0.0.0.0` inside Docker |
+| `CONSOLE_PORT` | Application HTTP port; `--port` takes precedence | `8082` |
+| `CONSOLE_BIND_ADDRESS` | Compose host-side published address | `127.0.0.1` |
+| `CONSOLE_DATA_DIR` | SQLite directory | Local `data/`, `/data` in Docker |
+| `CONSOLE_PUBLIC_URL` | External origin for dashboard links and HTTPS cookie policy | Browser origin for links; Secure cookies require an HTTPS setting |
+| `CONSOLE_ALLOWED_HOSTS` | Additional accepted DNS names in HTTP Host headers | None; localhost and private/loopback IP addresses are accepted |
+| `--interval` | Target container-statistics sampling interval | 5 seconds, minimum 2 |
 
-Container inventory refresh targets about 30 seconds; storage and optional Agent information about 60 seconds. API response times may affect observed refresh intervals. The SQLite database holds configuration, password hashes, dashboards, shares and a rolling 24-hour history for selected metrics. **Portainer API tokens are not encrypted by the application.** Protect its storage volume and backups.
+Inventory refresh targets about 30 seconds; storage and optional Agent information about 60 seconds. Upstream latency affects actual collection. Dashboard refresh intervals of 5, 10, 30 or 60 seconds control display updates separately from backend sampling. Selected metrics are retained in SQLite for a rolling 24 hours; unsupported or missing values remain unavailable, rather than becoming zero.
 
-For remote access, use a reverse proxy with HTTPS and access controls. Set `CONSOLE_PUBLIC_URL` to the actual HTTPS origin; the built-in HTTP server does not terminate TLS. Avoid committing credentials to files or passing them in Docker build arguments.
+**Portainer API tokens are stored without application-level encryption.** Protect the data directory, volume and backups. Use a dedicated token with the least permissions available. For remote access, use HTTPS through a reverse proxy, preserve Host and set `CONSOLE_PUBLIC_URL` to the actual external HTTPS origin. The built-in server does not terminate TLS. Active shared dashboard URLs are bearer credentials: anyone receiving one can view its selected data until it is revoked.
 
 ## Development and verification
 
@@ -149,30 +143,27 @@ python scripts/verify_release.py
 python scripts/build_release.py
 ```
 
-The browser tests use temporary local services and synthetic Portainer responses. The current CI workflow runs the source checks on Linux and Windows and isolated Docker acceptance on both AMD64 and ARM64. There is no automatic publishing job. Review the [test and release record](RELEASE_AUDIT.md) and [contribution guidelines](CONTRIBUTING.md) before making changes.
+Tests use isolated local services and synthetic Portainer responses. The workflow checks and builds; it does not publish images or create releases. See [Contributing](CONTRIBUTING.md) for security scans and container acceptance.
 
 ## Limitations
 
-- Docker is the primary supported data model. Kubernetes, Podman and asynchronous Edge environments are not treated as equivalent Docker APIs.
-- Host-wide CPU/RAM metrics outside Docker, GPU usage, CPU temperature and arbitrary application telemetry require additional exporters or APIs.
-- Up to 64 panels per dashboard and 16 sources per panel are accepted; history is limited to 24 hours.
-- Swarm, optional Agent data and some memory/IO counters depend on Docker versions, runtime capabilities and permissions.
-- Shared dashboard URLs are bearer links: anyone who receives an active link can see that dashboard's selected data. Revoke links when no longer required.
-- This is an alpha application intended for controlled deployments, not a drop-in public Internet monitoring service.
+- Docker is the primary data model. Kubernetes, Podman and asynchronous Edge environments are not treated as equivalent Docker APIs.
+- Host CPU/RAM outside containers, GPU usage, temperature and arbitrary application telemetry require additional exporters or APIs.
+- Dashboards accept up to 64 panels and 16 sources per panel. History is limited to 24 hours.
+- Swarm data, optional Agent information and some memory/I/O counters depend on API versions, capabilities and permissions.
+- Pattern-based redaction cannot guarantee that upstream logs, labels or errors contain no sensitive data.
 
-For metric definitions and caveats, see [METRICS.md](METRICS.md). Security guidance is in [SECURITY.md](SECURITY.md).
-
-## Project documentation
+## Documentation
 
 | Document | Purpose |
 | --- | --- |
-| [Release audit](RELEASE_AUDIT.md) | Executed CI checks, local review and outstanding validation |
-| [Deployment guide](docs/DEPLOYMENT.md) | Docker, Portainer, security and upgrade instructions |
-| [Metric reference](METRICS.md) | Measurements, units and collection boundaries |
-| [Changelog](CHANGELOG.md) | Version history and changes |
-| [Contributing](CONTRIBUTING.md) | Development workflow and test commands |
-| [Security](SECURITY.md) | Vulnerability reporting and deployment safeguards |
-| [Licensing](docs/LICENSING.md) | MIT application licensing and third-party obligations |
-| [Third-party notices](THIRD_PARTY_NOTICES.md) | Dependency attribution and notices |
+| [Deployment](docs/DEPLOYMENT.md) | Docker, Portainer, network access and upgrades |
+| [Metrics](METRICS.md) | Units, collection and interpretation |
+| [Security](SECURITY.md) | Vulnerability reporting and safeguards |
+| [Release verification](RELEASE_AUDIT.md) | Completed checks, evidence and outstanding validation |
+| [Changelog](CHANGELOG.md) | Version changes |
+| [Contributing](CONTRIBUTING.md) | Development and verification |
+| [Licensing](docs/LICENSING.md) | Application license and redistribution obligations |
+| [Third-party notices](THIRD_PARTY_NOTICES.md) | Dependency attribution |
 
-**License:** [MIT](LICENSE). I maintain this as an independent open-source project; Portainer and other third-party names remain the property of their respective owners.
+**License:** [MIT](LICENSE). Portainer and other third-party names remain the property of their respective owners.

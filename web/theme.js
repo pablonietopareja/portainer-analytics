@@ -2,7 +2,7 @@
 (() => {
   const media = window.matchMedia("(prefers-color-scheme: dark)");
   let mode = "system", saved = false;
-  try { const value = localStorage.getItem("edge-alpha-theme"); if (["light", "dark", "system"].includes(value)) { mode = value; saved = true; } } catch {}
+  try { const value = localStorage.getItem("edge-console-theme"); if (["light", "dark", "system"].includes(value)) { mode = value; saved = true; } } catch {}
   const apply = () => {
     document.documentElement.dataset.theme = mode === "system" ? (media.matches ? "dark" : "light") : mode;
     document.documentElement.style.colorScheme = document.documentElement.dataset.theme;
@@ -11,7 +11,7 @@
   };
   window.Theme = {
     get mode() { return mode; },
-    set(value) { if (!["light", "dark", "system"].includes(value)) return; mode = value; saved = true; try { localStorage.setItem("edge-alpha-theme", value); } catch {} apply(); },
+    set(value) { if (!["light", "dark", "system"].includes(value)) return; mode = value; saved = true; try { localStorage.setItem("edge-console-theme", value); } catch {} apply(); },
     preset(value) { if (!saved && ["light", "dark", "system"].includes(value)) { mode = value; apply(); } },
   };
   media.addEventListener("change", () => { if (mode === "system") apply(); });

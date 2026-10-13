@@ -106,6 +106,20 @@ class PublicSecurityTests(unittest.TestCase):
             self.assertFalse(session["admin"])
             self.assertEqual(self.request("GET", "/api/settings").status_code, 401)
 
+    def test_public_runtime_metadata_uses_central_release_version(self):
+        self.start_server()
+        for path in ("/api/health", "/api/session"):
+            with self.subTest(path=path):
+                response = self.request("GET", path)
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(response.json()["version"], console.VERSION)
+                self.assertTrue(
+                    response.headers["Server"].startswith(f"PortainerAnalytics/{console.VERSION}")
+                )
+        response = self.request("GET", "/console.css")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("text/css", response.headers["Content-Type"])
+
     def test_saved_connection_is_authoritative_without_bootstrap_reads(self):
         saved = {
             "url": "https://synthetic-saved.invalid",

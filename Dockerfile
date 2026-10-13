@@ -9,7 +9,8 @@ ENV PATH="/opt/venv/bin:$PATH" \
     PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1 \
     CONSOLE_HOST=0.0.0.0 CONSOLE_PORT=8082 CONSOLE_DATA_DIR=/data
 LABEL org.opencontainers.image.title="Portainer Analytics" \
-    org.opencontainers.image.version="alpha.3"
+    org.opencontainers.image.version="1.0.0" \
+    org.opencontainers.image.licenses="MIT"
 WORKDIR /app
 RUN groupadd --gid 10001 analytics \
     && useradd --uid 10001 --gid analytics --no-create-home analytics \
@@ -17,6 +18,7 @@ RUN groupadd --gid 10001 analytics \
 COPY --from=dependencies /opt/venv /opt/venv
 COPY portainer_console.py engine.py persistence.py dashboard_metrics.py telemetry.py VERSION ./
 COPY web ./web
+COPY LICENSE THIRD_PARTY_NOTICES.md /usr/share/doc/portainer-analytics/
 USER 10001:10001
 VOLUME ["/data"]
 EXPOSE 8082

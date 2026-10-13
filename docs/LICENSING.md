@@ -1,13 +1,13 @@
 # Licensing
 
-I publish Portainer Analytics application code and documentation under the [MIT License](../LICENSE). Contributions must be original work or compatible with the licenses of material they include.
+Portainer Analytics application code and documentation are provided under the existing [MIT License](../LICENSE). Contributions must be original work or redistributable under compatible terms. The repository's copyright statement is retained; source review alone does not independently establish ownership or resolve employment-related intellectual-property obligations.
 
-Third-party packages retain their own license terms. Their upstream licenses, notices and recorded versions are listed in [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md). The installed Python distribution metadata and relevant license files should be preserved when redistributing a complete runtime environment or container.
+Third-party packages retain their own terms. Recorded versions and upstream references are listed in [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md). Preserve installed Python distribution metadata, notices and applicable license files when redistributing a complete runtime environment or container.
 
-The source repository does not bundle the Python/Debian container base layers, test-browser executables, third-party font files or copied Portainer application code. Container builds download their declared dependencies and base image. A Python runtime SBOM is included, but it does not substitute for a full built-image license and operating-system package inventory.
+The source repository does not bundle Python/Debian base layers, test-browser executables, third-party font files or Portainer application code. Container builds download their declared dependencies and base image. The included [Python runtime SBOM](sbom-runtime.cdx.json) identifies runtime libraries; it is not a full built-image operating-system or license inventory.
 
-The interface screenshots in `imgs/` document this project's own UI. They are published as project documentation, not as a claim of ownership over Docker, Portainer or any third-party names that may be visible in an example environment.
+Screenshots in `imgs/` document the application's interface using synthetic test data. They do not imply ownership of Docker, Portainer or third-party names.
 
-Portainer Analytics is an independent project that uses the Portainer API. Portainer's product name and other trademarks belong to their owners; I do not claim sponsorship, certification or endorsement.
+Portainer Analytics is independent and uses the Portainer Server API. Product names and trademarks belong to their owners; no sponsorship, certification or endorsement is claimed.
 
-Refer to [RELEASE_AUDIT.md](../RELEASE_AUDIT.md) for checks completed in CI and additional release or deployment qualifications.
+See [Release verification](../RELEASE_AUDIT.md) for the evidence and limitations of completed checks.

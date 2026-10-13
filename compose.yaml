@@ -1,11 +1,11 @@
 services:
   portainer-analytics:
     build: .
-    image: portainer-analytics:alpha-3
+    image: portainer-analytics:1.0.0
     pull_policy: never
     restart: unless-stopped
     ports:
-      - "8082:8082"
+      - "${CONSOLE_BIND_ADDRESS:-127.0.0.1}:8082:8082"
     environment:
       CONSOLE_PUBLIC_URL: "${CONSOLE_PUBLIC_URL:-}"
       CONSOLE_ALLOWED_HOSTS: "${CONSOLE_ALLOWED_HOSTS:-}"

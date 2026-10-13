@@ -1,6 +1,6 @@
 # Contributing
 
-Portainer Analytics is an independent project focused on readable operational data, bounded resource usage and predictable behavior on small Docker hosts. I welcome focused bug reports and contributions that preserve those goals.
+Portainer Analytics is an independent project focused on readable operational data, bounded resource usage and predictable behavior on small Docker hosts. Focused bug reports and contributions that preserve those goals are welcome.
 
 ## Development setup
 
@@ -52,7 +52,7 @@ python -m bandit -r portainer_console.py engine.py persistence.py dashboard_metr
 gitleaks dir . --config .gitleaks.toml --redact --max-archive-depth 3
 ```
 
-CI runs the dependency advisory and Bandit checks. Gitleaks is a separate local check in the documented release workflow. Do not treat these tools as a substitute for a built-image OS scan or a penetration test.
+CI runs the dependency advisory and Bandit checks. Gitleaks is a separate source scan; inspect tracked paths and archive contents as well as scanner findings. A history review can use `gitleaks git . --config .gitleaks.toml --redact`; a finding may require credential revocation even after a file is deleted. Do not rewrite history as part of an ordinary fix. These tools do not substitute for a built-image OS scan or a penetration test.
 
 To regenerate the runtime Python SBOM:
 
@@ -66,6 +66,6 @@ The SBOM does not include container OS packages or development browser binaries.
 
 Write documentation for readers deploying the application for the first time. Use concrete paths and commands, name supported configurations precisely, and separate tested behavior from optional capabilities.
 
-The [CI workflow](.github/workflows/ci.yml) covers Linux/Windows source checks and isolated Linux AMD64/ARM64 container acceptance. It does not publish images or releases. The packaging script produces both a source ZIP (including documentation screenshots) and a Docker build-context tar (runtime files only).
+The [CI workflow](.github/workflows/ci.yml) covers Linux/Windows source checks and isolated Linux AMD64/ARM64 container acceptance. It does not publish images or releases. The packaging script produces a source ZIP including documentation screenshots and a Docker build-context tar containing runtime files and project license/notices.
 
 Review [DEPLOYMENT.md](docs/DEPLOYMENT.md), [RELEASE_AUDIT.md](RELEASE_AUDIT.md) and [SECURITY.md](SECURITY.md) when changes affect deployment or access control. Contributions must be original or redistributable under compatible terms.

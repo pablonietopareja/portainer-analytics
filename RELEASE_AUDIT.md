@@ -1,80 +1,72 @@
-# Release audit — alpha.3
+# Release verification record - 1.0.0
 
-**Release:** `alpha.3`  
-**Documentation reviewed:** 2026-10-13  
-**Repository:** [pablonietopareja/portainer-analytics](https://github.com/pablonietopareja/portainer-analytics)  
-**Disposition:** Public alpha source release; automated checks passing, with deployment-specific limits stated below.
+- **Target version:** `1.0.0`
+- **Review date:** 2026-10-13
+- **Repository:** [pablonietopareja/portainer-analytics](https://github.com/pablonietopareja/portainer-analytics)
+- **Source under review:** local 1.0.0 working-tree changes based on `dcff77cacec7b88481fd7754d8f4a76d28ba223c`
+- **Remote verification of these changes:** **PENDING**
 
-## Summary
+This is a maintainer verification record, not independent third-party certification. Local working-tree results apply to the reviewed files, not to an unpublished commit or tag. A final commit must complete its own CI run before historical results can be supplemented with new revision-specific evidence.
 
-I reviewed the `alpha.3` source tree, release packaging, documented security boundaries and test configuration. The repository's GitHub Actions workflow completed successfully on 2026-10-13 for all four matrix jobs: Ubuntu source checks, Windows source checks, native Linux AMD64 Docker acceptance and native Linux ARM64 Docker acceptance.
+## Historical CI evidence
 
-This is a source-level and CI-backed release record, not a claim that every real Portainer installation or every container package has been separately audited. The distinction matters: the CI jobs start isolated application instances and synthetic Portainer services. Live screenshots demonstrate an operating installation, but do not by themselves establish which exact release commit was deployed.
+[GitHub Actions run 38371715631](https://github.com/pablonietopareja/portainer-analytics/actions/runs/38371715631) completed successfully for source revision `dcff77cacec7b88481fd7754d8f4a76d28ba223c`. Its four jobs cover Ubuntu and Windows source checks, plus native Linux AMD64 and ARM64 container acceptance. This evidence predates the 1.0.0 working-tree changes and does **not** verify them.
 
-**CI evidence:** [successful workflow run #3](https://github.com/pablonietopareja/portainer-analytics/actions/runs/38356061403) on `main` (`f50c0d931a8811c8a26f18c46717aad6a5d59232`).
+The source-check pipeline includes locked dependency installs, Python lint/format/tests, JavaScript and browser tests, source/release verification, deterministic packaging, Bandit, pip-audit and npm audit. Container jobs build and start isolated, unconfigured application instances and check non-root operation, the read-only root filesystem, anonymous management denial and restart persistence.
 
-## Scope and changes
+## Current verification
 
-`alpha.3` establishes a standalone source distribution of the console. The project includes five Python runtime modules, locally hosted HTML/CSS/JavaScript, synthetic Python and browser tests, pinned Python and Node development dependencies, Docker/Compose manifests, security checks, an MIT license, third-party notices and release scripts.
+The following results record checks of the local 1.0.0 files. `NOT RUN` is not a passing result. Remote jobs remain pending until the final reviewed revision is committed and its workflow completes.
 
-The implementation also introduces first-use administrator setup, hardened session handling, bounded HTTP concurrency and request bodies, fixed SQL query paths, dashboard persistence, read-only sharing and a multi-stage non-root Docker image. The container requires neither privileged mode nor a Docker socket mount.
+| Check | Status | Evidence and scope |
+| --- | --- | --- |
+| Python syntax | **PASS** | `python -m compileall -q`, covering runtime, scripts and tests |
+| Ruff lint and formatting | **PASS** | Ruff 0.17.0: `python -m ruff check .` and `python -m ruff format --check .`; 24 files reported as correctly formatted |
+| Full Python regression suite | **PASS** | `python -m unittest discover -s tests`; 102 tests passed, covering synthetic telemetry, setup, authentication, CSRF, sessions, persistence, API behavior and release regressions |
+| Locked Node install and JavaScript checks | **PASS** | `npm ci --ignore-scripts` and `npm run check`; development dependencies and frontend syntax |
+| Frontend unit/DOM tests | **PASS** | `npm test`; synthetic interface behavior and charts |
+| Chromium acceptance | **PASS** | `npm run test:browser`; isolated test services, not live Portainer |
+| Both Compose manifests | **PASS** | Compose CLI 5.6.0: `config --quiet` for both manifests; no daemon required |
+| Source verifier and local documentation links | **PASS** | `python scripts/verify_release.py`; 65 intended source files, assets and release policies; all 47 local links/anchors resolve |
+| Deterministic source ZIP and build-context tar | **PASS** | `python scripts/build_release.py` run twice; 65 source ZIP files and 23 Docker-context files; exact payloads and SHA-256 checksums verified, byte-identical repeated builds |
+| Version agreement and runtime health/version | **PASS** | Release regression tests and `scripts/verify_release.py` check `1.0.0` metadata, image tags and names; native Python CLI startup and `/api/health`/`/api/session` report `1.0.0` |
+| Native Python restart and persistence | **PASS** | Two disposable local starts, no configured Portainer connection; health succeeds, anonymous snapshot access returns 401 and a SQLite marker survives restart |
+| Python dependency advisory checks | **PASS** | pip-audit 2.10.1: `python -m pip_audit -r requirements-dev.txt --no-deps --disable-pip`; no known vulnerabilities in the combined locked dependency set |
+| npm dependency advisory check | **PASS** | `npm audit --audit-level=moderate`; zero reported vulnerabilities in locked development packages |
+| Bandit runtime static analysis | **PASS** | Bandit 1.9.4: configured runtime `-ll` scan; zero findings at the selected severity/confidence threshold |
+| Current-source secret scan | **PASS** | Gitleaks 8.30.1 scanned the 65-file source snapshot; zero leaks detected; not a guarantee of complete detection |
+| Git history secret review | **PASS** | Gitleaks 8.30.1 scanned all four local commits with `git --all`; no leaks detected; history retained |
+| Screenshot privacy and rendered UI review | **PASS** | Four updated screenshots captured from the rendered 1.0.0 interface with strictly synthetic data and visually inspected |
+| Final whitespace and current release-reference sweep | **PASS** | `git diff --check`; exhaustive case-insensitive checks found zero old release-label matches in current source text and filenames; separate visual screenshot review passed |
+| Local disposable Docker acceptance | **NOT RUN** | No Docker Engine/daemon is available locally; standalone Compose validation cannot verify container behavior |
+| Local native ARM64 acceptance | **NOT RUN** | No native ARM64 runner is available locally; cross-building is not native acceptance |
+| New Ubuntu/Windows source CI | **PENDING REMOTE CI** | Final 1.0.0 revision has not completed a remote run |
+| New native AMD64/ARM64 container CI | **PENDING REMOTE CI** | Historical passing jobs cannot qualify new changes |
+| Exact-version live Portainer integration | **NOT RUN** | Must use a separately authorized test environment |
+| Built-image OS advisory and complete license scan | **NOT RUN** | No local built image/daemon is available; Python/npm audits and source notices do not cover the full image |
 
-I excluded credentials, deployment databases, private connection settings, raw telemetry exports, virtual environments, installed development tools and generated caches from the distributable source. Documentation screenshots are interface illustrations rather than exported operational fixtures.
+## Release content and operational boundaries
 
-## Verification matrix
+The release contains five Python runtime modules, a locally hosted frontend, synthetic test services, locked dependencies, hardened Docker/Compose definitions and deterministic archive builders. Source packaging includes public documentation and screenshots. The Docker build context contains runtime sources, frontend assets and project license/notices; it excludes screenshots, development tools and local operational state.
 
-The statuses below distinguish **results visible in GitHub Actions** from **checks recorded in the earlier local release review** and **work still requiring separate evidence**. A successful Docker build is not equivalent to a full vulnerability assessment or a production Portainer integration test.
+Portainer Analytics reads inventory and telemetry through the Portainer Server API. It does not modify managed Docker resources. It persists its own configuration, administrator password hashes, dashboards, sharing capabilities and selected-metric history. Existing SQLite data volumes must be retained across upgrades.
 
-| Check | Evidence / command | Status | Scope |
-| --- | --- | --- | --- |
-| Linux Python and frontend checks | GitHub Actions `checks (ubuntu-24.04)` | **PASS — CI** | Locked install, Ruff, Python tests, JS/DOM/browser tests, release verification, Bandit, pip-audit and npm audit |
-| Windows Python and frontend checks | GitHub Actions `checks (windows-2025)` | **PASS — CI** | Same source-check pipeline on Windows |
-| Docker AMD64 build and health | GitHub Actions `docker (ubuntu-24.04)` | **PASS — CI** | Native build, Compose startup and healthcheck |
-| Docker ARM64 build and health | GitHub Actions `docker (ubuntu-24.04-arm)` | **PASS — CI** | Native ARM64 build, Compose startup and healthcheck |
-| Container security policy | `scripts/check_container.py`, run by both Docker jobs | **PASS — CI** | UID/GID 10001, read-only root filesystem, denied anonymous management and volume persistence after restart |
-| Release packaging | `scripts/verify_release.py` and `scripts/build_release.py`, run by source-check jobs | **PASS — CI** | Required source files, relative Markdown links, build context, archive contents and pinned CI actions |
-| Python functional regression | `python -m unittest discover -s tests -v`, run by source-check jobs | **PASS — CI** | Metrics, persistence, first-use, session security and API behavior with synthetic fixtures |
-| Browser interaction regression | `npm test` and `npm run test:browser`, run by source-check jobs | **PASS — CI** | Canvas charts, dashboard interactions, login, sharing and UI workflows with synthetic services |
-| Python and Node dependency advisories | `pip-audit` / `npm audit`, run by source-check jobs | **PASS — CI** | Advisory checks against locked package manifests at run time; not a permanent guarantee |
-| Static Python security review | Bandit, run by source-check jobs | **PASS — CI** | Configured runtime static-analysis check, not penetration testing |
-| Source secret scan | Gitleaks directory scan documented in the local 2026-10-12 review | **PASS — recorded local review** | Not part of the current GitHub Actions workflow; no new scan is implied |
-| Source isolation | Comparison of 132 original files documented in the local 2026-10-12 review | **PASS — recorded local review** | Historical preparation check; not rerun by this audit |
-| Real Portainer API integration of the exact `alpha.3` image | Dedicated deployment acceptance required | **NOT INDEPENDENTLY VERIFIED** | Screenshots and an earlier `alpha.2` health check are not exact-version integration evidence |
-| Built-image OS vulnerability and license scan | Container image inventory and advisory scanner | **NOT INDEPENDENTLY VERIFIED** | CI dependency scans do not inspect all operating-system image packages |
-| Live behavior across specific Portainer/Agent versions | Record exact server, Agent and Docker versions per environment | **NOT FULLY QUALIFIED** | Optional APIs, network topology and platform versions vary |
+The supplied Docker Compose and Docker Standalone stack manifests publish to host loopback by default. LAN publication is an explicit configuration choice. Containers on a shared Docker network can still reach the internal listener. Docker Swarm publication has different semantics and is not supported by these stack instructions.
 
-The Python test suite included 97 tests in the earlier local acceptance record. The current CI workflow supplies stronger independent execution evidence for its source and native-container jobs; individual pass counts should be taken from the associated logs rather than assumed for future revisions.
+The runtime uses salted scrypt password hashes, cookie sessions and CSRF checks for management. Portainer API tokens are stored **without application-level encryption**. Dashboard share URLs are bearer credentials. Secure cookies require the actual HTTPS origin in `CONSOLE_PUBLIC_URL`; the built-in server does not terminate TLS.
 
-## Architecture and deployment evidence
+Local validation uses Python 3.14.6, Node.js 24.18.0, npm 11.16.0 and Chromium through Playwright 1.64.0. Container security settings are inspected in source and were exercised by historical CI; they have not been run locally for the changed release because no Docker daemon is available.
 
-The Docker configuration builds a Python 3.14.6-based image on both native architectures in the CI matrix, runs it under UID/GID `10001:10001`, mounts a dedicated SQLite data volume and applies a read-only root filesystem, capability drop, `no-new-privileges` and a healthcheck. The automated container acceptance script also verifies startup state, session restrictions and restart persistence in a disposable test workspace.
+Archive reproducibility was checked for identical source bytes with the same Python/compression toolchain. Fixed ZIP Unix metadata, timestamps, file modes and LF checksum output remove those platform differences; byte identity across different compression-library versions has not been established. Rebuild and verify checksums after any source change, including changes to this record.
 
-A separate running edgeNode installation has been observed through the console's Overview, Containers, Dashboards and administrator access screens. That observation establishes the UI's operational presentation, not a controlled comparison between `alpha.2` and `alpha.3`. The original `alpha.2` field review also recorded HTTP 200 from `/api/health` and Docker 28.3.0 on an aarch64 host.
+## Evidence limits
 
-For a particular target deployment, follow [DEPLOYMENT.md](docs/DEPLOYMENT.md), confirm the running application version, verify live Portainer queries, and record the host's Docker, Portainer and Agent versions.
+Synthetic Portainer fixtures test supported response shapes and failure modes; they do not prove exact compatibility with a live Portainer Server, Agent, Edge deployment or Docker version. Public synthetic screenshots are interface illustrations, not benchmarks or production acceptance evidence. No live infrastructure, real tokens or production data are needed for these checks.
 
-## Security and licensing
+Application dependency scans do not inspect every container operating-system package. A complete built-image advisory and redistribution assessment needs separate image inventory, scanner output and upstream notices. Clear scans are time-specific and do not guarantee the absence of vulnerabilities or replace ongoing patch management.
 
-The runtime Python dependencies are pinned as follows:
+The [runtime CycloneDX SBOM](docs/sbom-runtime.cdx.json) lists only the five locked Python runtime libraries. It is not a full image SBOM and does not include browser-test binaries. License terms and notices are documented in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and [Licensing](docs/LICENSING.md). The existing [MIT License](LICENSE) and copyright statement are retained; this review does not independently establish authorship or employment-related ownership.
 
-| Package | Version |
-| --- | --- |
-| requests | `2.34.2` |
-| urllib3 | `2.8.0` |
-| certifi | `2026.7.22` |
-| charset-normalizer | `3.5.2` |
-| idna | `3.20` |
+See [Deployment](docs/DEPLOYMENT.md), [Security](SECURITY.md) and [Contributing](CONTRIBUTING.md) for installation, safeguards and reproducible verification commands.
 
-The [runtime CycloneDX SBOM](docs/sbom-runtime.cdx.json) identifies these Python libraries. It does not list all operating-system packages or browser-test tools. License and notice information is maintained in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and [docs/LICENSING.md](docs/LICENSING.md).
-
-The application uses salted scrypt password hashes, cookie-based sessions and CSRF protection for authenticated management. Portainer tokens are stored in SQLite **without application-level encryption**. Public share URLs grant limited read access to explicitly shared dashboards and must be treated as bearer credentials. Secure cookies depend on an appropriately configured HTTPS public origin and reverse proxy. The default HTTP server is intended for controlled networks.
-
-A clear dependency or static scan is not a guarantee against undiscovered vulnerabilities; it does not replace threat modeling, penetration testing or ongoing patch management. Before distributing an image to others, inspect the actual built image for OS advisories and redistribution obligations.
-
-## Packaging and publication
-
-`scripts/build_release.py` creates a source ZIP and a Docker build-context tar. The source archive includes repository documentation and interface screenshots; the Docker build context includes only runtime sources and web assets. No credentials or operational telemetry belong in either artifact.
-
-The CI workflow checks and builds but does not publish a registry image or a GitHub release. Release/tag creation and deployment are deliberate maintainer actions. The repository is available under the [MIT License](LICENSE), with dependencies retaining their own terms.
-
-**Release decision:** Suitable for an openly documented `alpha.3` source release, with the verified CI acceptance and the separate integration/security qualification boundaries recorded above.
+**Release disposition:** Remote acceptance of the final 1.0.0 revision is pending. This record does not claim that a GitHub release, tag or registry image has been published.

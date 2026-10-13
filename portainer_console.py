@@ -35,6 +35,7 @@ from engine import decode_logs, redact, safe_inspect
 from persistence import Conflict, Store
 
 ROOT = Path(__file__).resolve().parent
+VERSION = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
 WEB = ROOT / "web"
 LOG = logging.getLogger("portainer-analytics")
 
@@ -390,6 +391,8 @@ class Manager:
 
 
 class Handler(engine.Handler):
+    server_version = f"PortainerAnalytics/{VERSION}"
+
     def log_message(self, fmt, *args):
         # Capability tokens and credentials never belong in access logs.
         if len(args) > 1 and str(args[1]) not in ("200", "201", "204", "304"):
@@ -546,7 +549,7 @@ class Handler(engine.Handler):
                     "controller.js",
                     "styles.css",
                     "theme.js",
-                    "alpha.css",
+                    "console.css",
                     "settings.js",
                     "dashboards.js",
                     "charts.js",
@@ -564,7 +567,7 @@ class Handler(engine.Handler):
                 ] + "; charset=utf-8"
                 return self.send(file.read_bytes(), mime=mime)
         if path == "/api/health":
-            return self.send({"status": "ok", "version": "alpha.3"})
+            return self.send({"status": "ok", "version": VERSION})
         if path == "/api/session":
             setup = self.setup_required()
             session = self.session(create_local=not setup)
@@ -576,7 +579,7 @@ class Handler(engine.Handler):
                     "csrf": session["csrf"] if session else None,
                     "login_available": bool(store.setting("admin_password")),
                     "setup_required": setup,
-                    "version": "alpha.3",
+                    "version": VERSION,
                 }
             )
         shared = re.fullmatch(r"/api/public/dashboards/([A-Za-z0-9_-]{30,60})", path)
@@ -883,8 +886,9 @@ def create_server(host, port, manager, local_admin=False):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Portainer Analytics alpha.3 · persistent dashboards and Portainer monitoring"
+        description=f"Portainer Analytics {VERSION} · persistent dashboards and Portainer monitoring"
     )
+    parser.add_argument("--version", action="version", version=f"Portainer Analytics {VERSION}")
     parser.add_argument("--host", default=os.environ.get("CONSOLE_HOST", "127.0.0.1"))
     parser.add_argument("--port", type=int, default=int(os.environ.get("CONSOLE_PORT", "8082")))
     parser.add_argument("--interval", type=int, default=5)
@@ -909,7 +913,7 @@ def main():
             signal.SIGTERM, lambda *_: threading.Thread(target=server.shutdown, daemon=True).start()
         )
     print(
-        f"\n  PORTAINER ANALYTICS / alpha.3\n  http://localhost:{args.port}\n  Persistent dashboards · Ctrl+C to stop\n",
+        f"\n  PORTAINER ANALYTICS / {VERSION}\n  http://localhost:{args.port}\n  Persistent dashboards · Ctrl+C to stop\n",
         flush=True,
     )
     try:

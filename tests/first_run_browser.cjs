@@ -46,6 +46,8 @@ async function main() {
     login.on('pageerror', (error) => failures.push(error.message));
     await login.goto(base);
     await login.locator('#login-password').waitFor();
+    assert.equal(await login.locator('.auth-card .eyebrow').innerText(), 'EDGE CONSOLE / ADMINISTRATION');
+    assert.equal(await login.locator('#workspace-port').innerText(), ':' + new URL(base).port);
     assert.equal(await login.locator('#setup-form').count(), 0);
     await login.locator('#login-password').fill(password);
     await login.getByRole('button', { name: 'Sign in', exact: true }).click();

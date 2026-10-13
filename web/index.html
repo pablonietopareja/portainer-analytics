@@ -5,7 +5,7 @@
   <meta name="theme-color" content="#151a20"><meta name="description" content="Local monitoring console for Portainer environments. Live CPU, memory, containers, and storage.">
   <script src="/theme.js"></script>
   <title>Edge Console · Portainer</title>
-  <link rel="icon" href="data:,"><link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/alpha.css">
+  <link rel="icon" href="data:,"><link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/console.css">
   <script src="/app.js" defer></script><script src="/views.js" defer></script><script src="/charts.js" defer></script><script src="/settings.js" defer></script><script src="/dashboards.js" defer></script><script src="/controller.js" defer></script>
 </head>
 <body>
@@ -26,7 +26,7 @@
       <button data-view="settings" class="nav-item"><span class="nav-symbol" aria-hidden="true">☷</span>Settings</button>
     </nav>
     <div class="fleet"><div class="nav-caption">DISCOVERED ENVIRONMENTS</div><div id="fleet"></div></div>
-    <div class="sidebar-footer"><span class="dot"></span><span>LOCAL WORKSPACE<small>Portainer API · Read only</small></span><span class="mono">:3009</span></div>
+    <div class="sidebar-footer"><span class="dot"></span><span>LOCAL WORKSPACE<small>Portainer API · Read only</small></span><span id="workspace-port" class="mono"></span></div>
   </aside>
   <div class="workspace">
     <header class="topbar"><button id="mobile-menu" class="icon-button" aria-label="Open menu">☰</button><div class="breadcrumb">Infrastructure <span>/</span> <b id="breadcrumb-env">Portainer</b></div><div class="topbar-right"><select class="theme-switch" data-theme-control aria-label="Color theme"><option value="light">Light</option><option value="dark">Dark</option><option value="system">System</option></select><span id="connection" class="live-badge pending"><span class="dot"></span>Connecting</span><span class="separator"></span><span id="clock" class="mono"></span></div></header>
@@ -40,6 +40,6 @@
   <dialog id="detail"><div class="drawer-header"><div><div class="eyebrow" id="detail-eyebrow">DETAIL</div><h2 id="detail-title"></h2></div><button id="close-detail" class="icon-button" aria-label="Close details">×</button></div><div id="detail-tabs"></div><div id="detail-body"></div></dialog>
   <div id="toast" role="status"></div>
   <div id="auth-screen" hidden></div>
-  <dialog id="alpha-modal"><div id="alpha-modal-content"></div></dialog>
+  <dialog id="console-modal"><div id="console-modal-content"></div></dialog>
 </body>
 </html>

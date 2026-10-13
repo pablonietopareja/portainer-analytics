@@ -8,6 +8,9 @@ import subprocess
 import time
 import urllib.error
 import urllib.request
+from pathlib import Path
+
+VERSION = (Path(__file__).resolve().parents[1] / "VERSION").read_text(encoding="utf-8").strip()
 
 
 def get(path):
@@ -32,7 +35,24 @@ def main():
         raise SystemExit("FAIL: container permissions differ from the deployment policy")
     if info["State"]["Health"]["Status"] != "healthy":
         raise SystemExit("FAIL: container is not healthy")
-    if not get("/api/session").get("setup_required"):
+    policy = info["HostConfig"]
+    if (
+        policy["Privileged"]
+        or policy["CapDrop"] != ["ALL"]
+        or "no-new-privileges:true" not in policy["SecurityOpt"]
+        or any(mount["Destination"] == "/var/run/docker.sock" for mount in info["Mounts"])
+    ):
+        raise SystemExit("FAIL: container hardening differs from the deployment policy")
+    if (
+        info["Config"]["Labels"].get("org.opencontainers.image.version") != VERSION
+        or info["Config"]["Image"] != "portainer-analytics:" + VERSION
+        or get("/api/health").get("version") != VERSION
+    ):
+        raise SystemExit("FAIL: image or health version differs from VERSION")
+    session = get("/api/session")
+    if session.get("version") != VERSION:
+        raise SystemExit("FAIL: session version differs from VERSION")
+    if not session.get("setup_required"):
         raise SystemExit("Refusing to test a configured workspace; use a fresh test volume")
     try:
         get("/api/snapshot")
@@ -69,7 +89,10 @@ def main():
     )
     if value != "synthetic" or not get("/api/session").get("setup_required"):
         raise SystemExit("FAIL: restart did not preserve the fresh workspace volume")
-    print("PASS: non-root/read-only image, health, anonymous denial and volume persistence.")
+    print(
+        "PASS: release versions, non-root/read-only image, hardening, health, "
+        "anonymous denial and volume persistence."
+    )
 
 
 if __name__ == "__main__":

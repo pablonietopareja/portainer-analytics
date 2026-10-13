@@ -129,7 +129,7 @@ class FakeManager:
 
 class TemporaryStoreTest(unittest.TestCase):
     def setUp(self):
-        self.temporary = tempfile.TemporaryDirectory(prefix="portainer-alpha-test-")
+        self.temporary = tempfile.TemporaryDirectory(prefix="portainer-console-test-")
         self.store = Store(self.temporary.name)
 
     def tearDown(self):

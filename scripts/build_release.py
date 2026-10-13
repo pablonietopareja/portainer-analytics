@@ -21,14 +21,14 @@ RUNTIME = (
     "Dockerfile",
     ".dockerignore",
     "VERSION",
+    "LICENSE",
+    "THIRD_PARTY_NOTICES.md",
 )
 SOURCE = (
     "README.md",
     "CHANGELOG.md",
     "CONTRIBUTING.md",
     "SECURITY.md",
-    "LICENSE",
-    "THIRD_PARTY_NOTICES.md",
     "RELEASE_AUDIT.md",
     "METRICS.md",
     "compose.yaml",
@@ -54,6 +54,14 @@ DIRECTORIES = {
 }
 
 
+def release_name(version):
+    """Validate a stable semantic version before deriving archive filenames."""
+    component = r"(?:0|[1-9][0-9]*)"
+    if not re.fullmatch(rf"{component}\.{component}\.{component}", version):
+        raise ValueError("Unsupported release version; expected MAJOR.MINOR.PATCH")
+    return "portainer-analytics-" + version
+
+
 def source_files():
     names = set(RUNTIME + SOURCE)
     for directory, suffixes in DIRECTORIES.items():
@@ -67,7 +75,14 @@ def read_files(names):
     result = {}
     for name in names:
         source = ROOT / name
-        if source.is_symlink() or not source.resolve().is_relative_to(ROOT) or not source.is_file():
+        if (
+            name != source.relative_to(ROOT).as_posix()
+            or any(part in (".", "..") for part in name.split("/"))
+            or "\\" in name
+            or source.is_symlink()
+            or not source.resolve().is_relative_to(ROOT)
+            or not source.is_file()
+        ):
             raise ValueError(f"Invalid or missing release file: {name}")
         data = source.read_bytes()
         if re.search(
@@ -94,25 +109,14 @@ def write_tar(path, payload):
                 raise ValueError(f"Build-context checksum differs: {name}")
 
 
-def main():
-    version = (ROOT / "VERSION").read_text().strip()
-    if not re.fullmatch(r"alpha\.\d+", version):
-        raise ValueError("Unsupported release version")
-    name = "portainer-analytics-" + version.replace(".", "-")
-    source = read_files(source_files())
-    runtime = {
-        key: value for key, value in source.items() if key in RUNTIME or key.startswith("web/")
-    }
-    output = ROOT / "dist"
-    output.mkdir(exist_ok=True)
-    context = output / (name + "-build-context.tar")
-    write_tar(context, runtime)
-    archive_path = output / (name + "-source.zip")
+def write_zip(archive_path, source):
+    """Write and verify a source archive with fixed timestamps and permissions."""
     with zipfile.ZipFile(
         archive_path, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9
     ) as archive:
         for key, data in sorted(source.items()):
             info = zipfile.ZipInfo(key, date_time=(1980, 1, 1, 0, 0, 0))
+            info.create_system = 3
             info.compress_type = zipfile.ZIP_DEFLATED
             info.external_attr = 0o644 << 16
             archive.writestr(info, data)
@@ -122,12 +126,27 @@ def main():
         for key, data in source.items():
             if archive.read(key) != data:
                 raise ValueError(f"Source archive checksum differs: {key}")
+
+
+def main():
+    version = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
+    name = release_name(version)
+    source = read_files(source_files())
+    runtime = {
+        key: value for key, value in source.items() if key in RUNTIME or key.startswith("web/")
+    }
+    output = ROOT / "dist"
+    output.mkdir(exist_ok=True)
+    context = output / (name + "-build-context.tar")
+    write_tar(context, runtime)
+    archive_path = output / (name + "-source.zip")
+    write_zip(archive_path, source)
     checksums = ""
     for path in (context, archive_path):
         digest = hashlib.sha256(path.read_bytes()).hexdigest()
         checksums += f"{digest}  {path.name}\n"
         print(f"Created {path.name} ({path.stat().st_size} bytes)")
-    (output / "SHA256SUMS").write_text(checksums, encoding="utf-8")
+    (output / "SHA256SUMS").write_text(checksums, encoding="utf-8", newline="\n")
     print(f"Verified {len(source)} source files and {len(runtime)} Docker-context files.")
     print("These are local build artifacts. Check RELEASE_AUDIT.md before publication.")
 

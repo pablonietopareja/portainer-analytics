@@ -56,6 +56,7 @@ jobs:
         with:
           python-version: "3.14.6"
       - run: docker compose -p analytics-ci config --quiet
+      - run: docker compose -p analytics-ci -f portainer-stack.yml config --quiet
       - run: docker compose -p analytics-ci up -d --build --wait --wait-timeout 120
       - name: Check container and restart persistence
         run: python scripts/check_container.py --project analytics-ci

@@ -1,11 +1,12 @@
-# Build portainer-analytics:alpha-3 in this Docker environment first.
+# Docker Standalone only: Swarm does not honor the loopback host binding.
+# Build portainer-analytics:1.0.0 in this Docker environment first.
 services:
   portainer-analytics:
-    image: portainer-analytics:alpha-3
+    image: portainer-analytics:1.0.0
     pull_policy: never
     restart: unless-stopped
     ports:
-      - "8082:8082"
+      - "127.0.0.1:8082:8082"
     environment:
       CONSOLE_PUBLIC_URL: ""
       CONSOLE_ALLOWED_HOSTS: ""

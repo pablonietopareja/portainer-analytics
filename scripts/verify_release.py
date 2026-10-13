@@ -8,11 +8,13 @@ import re
 from urllib.parse import unquote, urlsplit
 
 import yaml
-from build_release import ROOT, RUNTIME, read_files, source_files
+from build_release import ROOT, RUNTIME, read_files, release_name, source_files
 
 
 def main():
     payload = read_files(source_files())
+    version = payload["VERSION"].decode().strip()
+    release_name(version)
     for name, data in payload.items():
         if name.endswith(".png"):
             continue
@@ -37,19 +39,39 @@ def main():
                 raise ValueError(f"External interface dependency in {page}")
             if not (ROOT / "web" / asset.lstrip("/").split("?")[0]).is_file():
                 raise ValueError(f"Missing interface asset: {asset}")
-    image = "portainer-analytics:" + payload["VERSION"].decode().strip().replace(".", "-")
+    image = "portainer-analytics:" + version
     for name in ("compose.yaml", "portainer-stack.yml"):
         compose = yaml.safe_load(payload[name])
         service = compose["services"]["portainer-analytics"]
-        if service["image"] != image or service["ports"] != ["8082:8082"]:
+        expected_port = (
+            "${CONSOLE_BIND_ADDRESS:-127.0.0.1}:8082:8082"
+            if name == "compose.yaml"
+            else "127.0.0.1:8082:8082"
+        )
+        if service["image"] != image or service["ports"] != [expected_port]:
             raise ValueError(f"Image tag or port mismatch in {name}")
         if service.get("privileged") or service.get("pull_policy") != "never":
             raise ValueError(f"Unsafe or inconsistent deployment in {name}")
         if service["volumes"] != ["analytics-data:/data"] or not service["read_only"]:
             raise ValueError(f"Invalid persistence or filesystem policy in {name}")
+        if (
+            service.get("cap_drop") != ["ALL"]
+            or service.get("security_opt") != ["no-new-privileges:true"]
+            or service.get("tmpfs") != ["/tmp:rw,noexec,nosuid,size=64m"]
+        ):
+            raise ValueError(f"Container hardening policy differs in {name}")
         if name == "portainer-stack.yml" and "build" in service:
             raise ValueError("Portainer stack must use its prebuilt local image")
     dockerfile = payload["Dockerfile"].decode()
+    if f'org.opencontainers.image.version="{version}"' not in dockerfile:
+        raise ValueError("Docker image version differs from VERSION")
+    if "USER 10001:10001" not in dockerfile or "HEALTHCHECK " not in dockerfile:
+        raise ValueError("Docker image must keep its non-root user and healthcheck")
+    if "COPY LICENSE THIRD_PARTY_NOTICES.md /usr/share/doc/portainer-analytics/" not in dockerfile:
+        raise ValueError("Docker image must include the project license and third-party notices")
+    for base in re.findall(r"^FROM ([^\s]+)", dockerfile, re.MULTILINE):
+        if not re.fullmatch(r"[^@]+@sha256:[a-f0-9]{64}", base):
+            raise ValueError("Docker base image must be pinned to a digest")
     for line in dockerfile.splitlines():
         if line.startswith("COPY ") and "--from=" not in line:
             for source in line.split()[1:-1]:
@@ -59,6 +81,11 @@ def main():
                     raise ValueError(f"Missing Docker COPY source: {source}")
     package = json.loads(payload["package.json"])
     lock = json.loads(payload["package-lock.json"])
+    if any(
+        value != version
+        for value in (package["version"], lock["version"], lock["packages"][""]["version"])
+    ):
+        raise ValueError("Node package versions differ from VERSION")
     if package["devDependencies"] != lock["packages"][""]["devDependencies"]:
         raise ValueError("Node dependency manifest differs from its lockfile")
     workflow = yaml.safe_load(payload[".github/workflows/ci.yml"])

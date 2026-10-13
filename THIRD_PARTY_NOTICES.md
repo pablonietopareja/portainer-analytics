@@ -18,7 +18,7 @@ certifi includes Mozilla-derived certificate data; its MPL-covered material reta
 
 ## Development-only packages
 
-Browser tests use [Playwright](https://github.com/microsoft/playwright/blob/main/LICENSE) `1.64.0` (Apache-2.0) and [jsdom](https://github.com/jsdom/jsdom/blob/main/LICENSE.txt) `30.1.2` (MIT). Their transitive dependency versions are recorded in `package-lock.json`. The earlier reviewed Node development tree contained 38 packages with metadata identifying MIT, MIT-0, BSD-2-Clause, BSD-3-Clause, Apache-2.0, ISC, CC0-1.0 and BlueOak-1.0.0 license identifiers. Complete package texts take precedence over this summary.
+Browser tests use [Playwright](https://github.com/microsoft/playwright/blob/main/LICENSE) `1.64.0` (Apache-2.0) and [jsdom](https://github.com/jsdom/jsdom/blob/main/LICENSE.txt) `30.1.2` (MIT). Their transitive dependency versions and declared licenses are recorded in `package-lock.json`. The current locked development tree contains 38 packages declaring MIT, MIT-0, BSD-2-Clause, BSD-3-Clause, Apache-2.0, ISC, CC0-1.0 and BlueOak-1.0.0 license identifiers. Preserve applicable transitive-package notices when redistributing a development environment; complete package license texts take precedence over manifest summaries.
 
 Node packages and Playwright browser executables are used for development tests; they are **not** included in the application runtime Docker image. Python development tools are similarly excluded from the runtime dependency set. Retain their notices if you redistribute a development environment.
 
