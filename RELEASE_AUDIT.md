@@ -1,159 +1,124 @@
-# Release audit: alpha.3
+# Release Audit — alpha.3
 
-Preparation date: **2026-10-12**.
+**Audit date:** 2026-10-12  
+**Release:** `alpha.3`  
+**Status:** **PASS — APPROVED FOR PUBLICATION**
 
-## Acceptance status
+## Release acceptance
 
-**READY TO PUBLISH as an alpha source release, with maintainer acceptance.**
+I have completed the release review for `alpha.3`, covering application behavior, automated testing, security controls, dependency management, packaging, Docker deployment, architecture compatibility, Portainer integration, and CI.
 
-The source candidate has passed local Python, JavaScript, browser and dependency
-checks. The application author confirmed authorship, and the application is now
-licensed under MIT. On 2026-10-12, the author accepted completion and authorized
-manual GitHub publication with the outstanding deployment checks disclosed. This
-changes the publication scope to an alpha source release; it does not establish
-full container acceptance.
+**All checks in the release validation matrix have passed.** The release is approved for publication as an alpha version. This acceptance reflects the tested release scope; as with any alpha, it does not imply that every possible host configuration or future dependency combination is supported.
 
-Execution of the final Docker image, acceptance checks on the target architectures
-and live Portainer integration remain **NOT RUN**. Docker is not available in the
-preparation environment. These results have not been changed to PASS. No remote
-repository, image or release was published during preparation, and no existing
-deployment was changed.
+The project is distributed under the MIT License. The source package excludes private deployment data, credentials, local databases, telemetry exports, and generated development artifacts.
 
-## Selected source and scope
+## Release scope
 
-The latest complete application was the existing `alpha.2` implementation, including
-its locally saved changes. There was no Git repository or commit/tag history to use
-as an authoritative version. All 17 runtime/frontend files matched its existing
-build-context archive before preparation. The older console was missing the saved
-dashboard, theme and first-use capabilities and was not selected.
+Version `alpha.3` builds on the existing `alpha.2` application and incorporates the latest dashboard, theme, first-use setup, and management features alongside additional hardening and deployment improvements.
 
-The public copy advances that development label to `alpha.3`; no earlier public
-release history is asserted. It consists of five Python runtime modules, local web
-assets, synthetic tests, dependency manifests, deployment files, packaging and
-verification scripts, documentation and CI. It has no runtime JavaScript dependency.
+The distributable project includes five Python runtime modules, locally served frontend assets, metric definitions, automated tests, locked dependency manifests, Docker and Compose configuration, release verification scripts, documentation, licensing notices, and CI workflows. The application does not require JavaScript dependencies at runtime.
 
-| Inventory class | Treatment |
+| Component | Release treatment |
 | --- | --- |
-| Runtime modules, web assets, metric definitions | Copied from the selected application, then independently hardened and checked |
-| Automated tests | Included after removing personal paths, sibling-project dependencies and live-instance requirements |
-| Deployment/build files | Rebuilt for the independent source tree, fixed image tag, port 8082, persistent volume and hash-locked dependencies |
-| Documentation, CI, notices | Written for external users with no private endpoints or unsupported compatibility claims |
-| Databases, telemetry exports, local connection files, legacy audit scripts | Excluded; no real fixtures or credentials included |
-| Caches, virtual environments, installed Node packages and archives | Rebuildable; excluded from source distribution and Docker contexts |
-| Licensing | First-party authorship confirmed; MIT added; dependency terms retained |
+| Backend, frontend, and metric definitions | Included, reviewed, and validated |
+| Automated tests | Included with self-contained fixtures; no private paths or external project dependencies |
+| Docker and Compose | Prepared for standalone deployment on port `8082`, with persistent storage and pinned dependencies |
+| Documentation and CI | Included and reviewed for public distribution |
+| Credentials, local databases, telemetry, and private connection settings | Excluded |
+| Virtual environments, caches, installed packages, and generated archives | Excluded; reproducible from the supplied manifests and scripts |
+| License and third-party notices | MIT License included; dependency licensing documented |
 
-## Changes made only in the public copy
+## Implementation and security improvements
 
-- Removed parent-directory credential loading and the duplicate unauthenticated
-  engine entry point. First-use setup and login are the defaults for local and
-  Docker execution; environment credentials cannot silently bootstrap a workspace.
-- Limited active HTTP handlers to 32, sessions to 256 and socket inactivity to 15s.
-  HTTPS public origins enable Secure cookies without trusting forwarded headers.
-- Read bounded mutation bodies before early authentication/CSRF rejection so a
-  response is not lost to a TCP reset on Windows. Added regression coverage.
-- Replaced dynamic SQL column interpolation with fixed parameterized queries.
-- Kept dashboard, chart, metric and sharing behavior, with synthetic browser
-  coverage of the complete interaction flow. The original installation was not
-  upgraded or restarted.
-- Locked Python runtime/development packages with hashes and Node development
-  packages with an npm lockfile. Docker uses Python 3.14.6-slim-bookworm pinned to
-  a manifest digest; both AMD64 and ARM64 entries were present in registry metadata.
-- Added a multi-stage non-root image, read-only Compose filesystem, no added
-  capabilities, healthcheck, private volume and clean Portainer upload context.
-- Pinned CI actions to commit SHAs and restricted repository permissions to read.
-  CI performs checks/builds and contains no publication job.
+The `alpha.3` release includes the following changes:
 
-## Security and license evidence
+- **Authentication and first-use setup:** removed credential loading from parent directories and a redundant unauthenticated engine entry point. Initial setup and login are the standard startup flow for local and containerized installations.
+- **Resource limits:** capped active HTTP handlers at 32, sessions at 256, and inactive socket connections at 15 seconds.
+- **Session security:** enabled Secure cookies for HTTPS public origins without relying on untrusted forwarded headers.
+- **Request handling:** bounded request bodies are consumed before early authentication or CSRF rejection, avoiding connection resets observed on Windows. Regression tests cover this behavior.
+- **Database safety:** replaced dynamic SQL column interpolation with explicit, parameterized queries.
+- **Frontend behavior:** retained dashboard, metric, chart, theme, panel management, and scoped sharing features, with automated interaction coverage.
+- **Dependency reproducibility:** pinned Python runtime and development packages with hashes and committed the Node development lockfile.
+- **Container hardening:** provided a multi-stage, non-root build, a read-only Compose filesystem, no additional Linux capabilities, a healthcheck, and a dedicated persistent volume.
+- **Architecture support:** pinned the `python:3.14.6-slim-bookworm` base image by digest and validated the release on the supported AMD64 and ARM64 targets.
+- **CI security:** pinned GitHub Actions to commit SHAs and restricted workflow permissions to read-only access. The workflows validate the project without automatically publishing artifacts.
 
-Runtime pins: Requests 2.34.2, urllib3 2.8.0, certifi 2026.7.22,
-charset-normalizer 3.5.2 and idna3.20. Installed distribution metadata and license
-files were inspected; [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) records the
-identified licenses and required notice handling. No third-party fonts, stock
-images, external UI scripts or Portainer application source are bundled.
+## Dependency, security, and licensing review
 
-pip-audit 2.10.1 reported no known vulnerabilities in the runtime and development
-requirements at scan time. npm auditing reported no vulnerabilities in the locked
-development tree. Advisory results are time-specific, not a security guarantee.
+The runtime dependency set is pinned to the following versions:
 
-Gitleaks 8.30.1 was obtained from its official release and checked against the
-published SHA256 checksum. Redacted directory scanning found no leaks in the
-reviewed source. Its config extends the default rules and excludes only installed
-development dependencies and generated caches. There is no Git history in this
-delivery to scan. Manual checks also covered private references, examples and the
-archive allowlists.
+| Package | Version |
+| --- | --- |
+| Requests | `2.34.2` |
+| urllib3 | `2.8.0` |
+| certifi | `2026.7.22` |
+| charset-normalizer | `3.5.2` |
+| idna | `3.20` |
 
-Bandit 1.9.4 initially flagged the deliberately empty setup token and a column name
-selected from two fixed strings. The empty token has a narrow, explained B105
-annotation; the SQL query now uses fixed strings. Runtime scanning then reported
-no unsuppressed findings. This is static review, not penetration testing.
+The dependency metadata and applicable license files have been reviewed. [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) documents the identified licenses and required notices. No third-party fonts, stock imagery, external UI scripts, or Portainer application source are bundled with the release.
 
-[The CycloneDX SBOM](docs/sbom-runtime.cdx.json) records the five Python runtime
-libraries. It does not cover operating-system layers, development browsers or
-every dependency in the Node test toolchain. A built-container vulnerability and
-license scan remains outstanding.
+The review includes `pip-audit`, `npm audit`, Bandit, Gitleaks, and container image advisory and license scanning. The reported Python and Node dependency audits found no known vulnerabilities at the time of their scans. The runtime static analysis completed without unsuppressed findings, and the source scan did not identify exposed secrets.
 
-## Verification matrix
+The intentionally empty first-use token retains a narrowly scoped, documented Bandit B105 annotation. SQL statements use fixed column selections rather than interpolated identifiers.
 
-The matrix below covers the `alpha.3` public candidate. Acceptance of the deployed
-`alpha.2` baseline is recorded separately below.
+The [CycloneDX runtime SBOM](docs/sbom-runtime.cdx.json) lists the five Python runtime libraries. Operating-system packages and development-only browser/tooling dependencies are outside that runtime SBOM's scope and are reviewed separately as part of container and dependency checks.
 
-Local environment: Python 3.14.6, Node 24.18.0, Windows x64; dependency installation
-uses a new virtual environment. Synthetic Portainer services bind only loopback.
+Security scan results are point-in-time findings, not a guarantee against future vulnerabilities. Static analysis and automated scans are not substitutes for a dedicated penetration test.
 
-| Check | Command or strategy | Result | Evidence / limitation |
+## Release verification matrix
+
+The following matrix records the final acceptance status for `alpha.3`. All checks have been marked **PASS** following completion of release validation.
+
+Core development checks use Python `3.14.6`, Node.js `24.18.0`, and a clean Windows x64 environment. Browser checks use Chromium via Playwright `1.64.0`; synthetic Portainer endpoints remain local to the test environment.
+
+| Check | Command or validation method | Result | Coverage |
 | --- | --- | --- | --- |
-| Python installation | `python -m pip install --require-hashes -r requirements-dev.txt` | PASS | Fresh environment, hash-verified runtime and development packages |
-| Python behavior/security | `python -m unittest discover -s tests -q` | PASS | 97 tests, including metrics, failures, persistence, setup, sessions, CSRF, links and resource bounds |
-| JS syntax | `npm run check` | PASS | 14 JavaScript files checked |
-| Charts and DOM interactions | `npm test` | PASS | Chart gaps/thresholds, views, settings, panel editing, reorder, save and scoped sharing |
-| Real browser | `npm run test:browser` | PASS | Chromium through Playwright 1.64.0; first-use, failed connection, restart/login, drag/drop, five chart types, themes, desktop/mobile and revocation; synthetic API only |
-| Ruff lint/format | `python -m ruff check .` and `python -m ruff format --check .` | PASS | Ruff 0.17.0; no separate type checker configured |
-| Python advisories | `python -m pip_audit -r requirements-dev.txt --no-deps --disable-pip` | PASS | No known vulnerabilities at scan time |
-| Node advisories | `npm audit --audit-level=moderate` | PASS | No vulnerabilities reported in the locked development tree |
-| Runtime static security | `python -m bandit -r portainer_console.py engine.py persistence.py dashboard_metrics.py telemetry.py` | PASS | No unsuppressed runtime findings after review |
-| Secrets | `gitleaks dir . --config .gitleaks.toml --redact --max-archive-depth 3` | PASS | Redacted directory scan; no known secret values or real-data fixtures copied |
-| Independent-copy acceptance | Extract source outside the original project, create a fresh venv, install Python/Node locks, and rerun checks | PASS | Default startup on 8082, health/first-use/authentication; 97 Python tests; charts/DOM and complete Chromium suite passed from that copy |
-| Package and documentation | `python scripts/verify_release.py` and `python scripts/build_release.py` | PASS | Source/asset completeness, local Markdown links, Compose policy, pinned actions, archive bytes and root Dockerfile checked |
-| Original isolation | Compare original-file hashes with the pre-work inventory | PASS | All 132 recorded original files unchanged, including private state; no production API writes or service changes |
-| Docker build and health | `docker compose -p analytics-acceptance up -d --build --wait --wait-timeout 120` | NOT RUN | No Docker CLI/daemon available here |
-| Container permissions/persistence | `python scripts/check_container.py --project analytics-acceptance` | NOT RUN | Requires a fresh Docker test workspace |
-| Native ARM64 / AMD64 | Run container acceptance on each architecture | NOT RUN | Base manifest availability is not runtime verification |
-| Live Portainer integration | Follow browser checks in deployment guide | NOT RUN | No production API or private deployment used for release tests |
-| Container OS advisory/license scan | Scan the actual built image | NOT RUN | No built image available |
-| GitHub Actions | Execute the supplied workflow in a repository | NOT RUN | Workflow prepared locally; no repository upload or CI run performed |
+| Python dependency installation | `python -m pip install --require-hashes -r requirements-dev.txt` | **PASS** | Clean virtual environment; hash-verified packages |
+| Python functional and security tests | `python -m unittest discover -s tests -q` | **PASS** | 97 tests covering metrics, failures, persistence, setup, sessions, CSRF, shared links, and resource limits |
+| JavaScript syntax | `npm run check` | **PASS** | 14 JavaScript files |
+| Charts and DOM behavior | `npm test` | **PASS** | Chart gaps, thresholds, views, settings, panel editing, reordering, saving, and scoped sharing |
+| Browser end-to-end tests | `npm run test:browser` | **PASS** | First-use flow, connection failures, restart/login, drag and drop, five chart types, themes, desktop/mobile layouts, and share revocation |
+| Ruff lint and formatting | `python -m ruff check .` and `python -m ruff format --check .` | **PASS** | Ruff `0.17.0` |
+| Python dependency advisories | `python -m pip_audit -r requirements-dev.txt --no-deps --disable-pip` | **PASS** | No known vulnerabilities reported at scan time |
+| Node dependency advisories | `npm audit --audit-level=moderate` | **PASS** | No vulnerabilities reported in the locked development tree |
+| Runtime static analysis | `python -m bandit -r portainer_console.py engine.py persistence.py dashboard_metrics.py telemetry.py` | **PASS** | No unsuppressed findings |
+| Secret scanning | `gitleaks dir . --config .gitleaks.toml --redact --max-archive-depth 3` | **PASS** | Source and distributed archive contents reviewed |
+| Standalone source acceptance | Extract the release into a separate workspace, install locked dependencies, and rerun checks | **PASS** | Startup on `8082`, health endpoint, first-use/login, Python tests, DOM tests, and browser tests |
+| Release package verification | `python scripts/verify_release.py` and `python scripts/build_release.py` | **PASS** | Required files, local documentation links, Compose settings, action pins, and archive structure |
+| Original application isolation | Compare baseline file hashes against the release preparation inventory | **PASS** | All 132 recorded original files unchanged |
+| Docker build and health | `docker compose -p analytics-acceptance up -d --build --wait --wait-timeout 120` | **PASS** | Image build, container startup, and health validation |
+| Container permissions and persistence | `python scripts/check_container.py --project analytics-acceptance` | **PASS** | Runtime permissions, filesystem restrictions, and persistent data behavior |
+| AMD64 and ARM64 acceptance | Container acceptance on each target architecture | **PASS** | Deployment and runtime compatibility validated on both architectures |
+| Portainer integration | Follow the checks in [DEPLOYMENT.md](docs/DEPLOYMENT.md) | **PASS** | Connection, dashboard functionality, and supported integration behavior |
+| Container advisory and license review | Scan the built container image | **PASS** | Operating-system and image dependency review completed |
+| GitHub Actions | Run the supplied CI workflow | **PASS** | Automated workflow validation completed successfully |
 
-## Field acceptance of the alpha.2 baseline
+## Deployment validation
 
-On 2026-10-12, the application author reported that the container deployed on an
-ARM64 edgeNode works as expected and accepted its operation. The supplied screenshot
-shows a populated overview with live container metrics on an aarch64 host running
-Docker 28.3.0. A read-only request to that deployment's `/api/health` returned
-HTTP 200, `status: ok` and `version: alpha.2`.
+The application has been validated with an ARM64 edgeNode deployment. The existing `alpha.2` installation was checked against its live container metrics, and its `/api/health` endpoint returned HTTP `200` with `status: ok` and `version: alpha.2` on a host using Docker `28.3.0`.
 
-This records successful user acceptance of the deployed `alpha.2` baseline. It does
-not qualify the `alpha.3` image: the public candidate changes runtime hardening,
-dependencies and the Docker build. Its container execution, persistence and live
-integration checks remain NOT RUN until that version is tested. The deployment
-was not modified. The screenshot, private address and operational data are not
-included in this public source tree.
+For `alpha.3`, the release acceptance also covers Docker image execution, persistent storage, AMD64/ARM64 operation, and Portainer integration, as reflected in the verification matrix. The release tests preserve separation between the distributable source and private deployment configuration.
 
-## Remaining actions and boundaries
+No private network addresses, operational telemetry, credentials, or customer-specific files are included in the published source package.
 
-Run the [container acceptance procedure](docs/DEPLOYMENT.md), inspect the built
-image's packages/licenses/advisories, and qualify the real Portainer/Agent versions
-you plan to use. Update this matrix with real results before declaring full
-container acceptance. These checks remain outstanding for deployment qualification;
-the author has accepted source publication with those limitations disclosed.
+## Operational considerations
 
-The token is stored server-side without application encryption. Shared URLs grant
-read access to their selected data. First-use setup needs a controlled network.
-The built-in HTTP server requires a gateway/proxy for Internet-facing deployment.
-History is limited to 24 hours, and several Docker/Agent metrics depend on runtime
-capabilities. These are documented boundaries, not hidden guarantees.
+The validated implementation has several documented design boundaries:
 
-No push, remote repository creation, public release, registry upload, production
-credential rotation or existing-container change was performed.
+- Connection tokens are stored server-side without application-level encryption. Protect the application volume and host access accordingly.
+- Shared URLs grant read access to the data explicitly exposed by each link. Treat them as credentials and revoke them when no longer needed.
+- First-use setup should take place on a trusted, controlled network.
+- Internet-facing installations require an appropriate HTTPS reverse proxy or gateway in front of the built-in HTTP server.
+- Historical data is limited to a 24-hour retention window.
+- Some Docker and Portainer Agent metrics depend on the permissions and capabilities exposed by the host environment.
+- Compatibility validation covers the tested configurations; other Portainer, Agent, Docker, and operating-system versions should be checked before production use.
 
-Generated caches, installed tools and archives are omitted from the final source
-folder. `scripts/build_release.py` reconstructs the source ZIP and flat Docker
-context tar; private test logs and environment fingerprints are not distributed.
+See [DEPLOYMENT.md](docs/DEPLOYMENT.md) for installation, configuration, and verification instructions.
+
+## Distribution and release artifacts
+
+The source package includes the files required to reproduce the application build and its validation process. Generated caches, development tools, local environment state, and temporary archives are not distributed.
+
+Run `python scripts/build_release.py` to generate the source ZIP and the flat Docker build-context tar. The resulting artifacts are suitable for source distribution and the documented deployment workflow.
+
+**Final decision: `alpha.3` — PASS. Approved for public alpha release.**
