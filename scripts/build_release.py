@@ -49,6 +49,7 @@ DIRECTORIES = {
     "tests": {".py", ".cjs"},
     "scripts": {".py"},
     "docs": {".md", ".json", ".png"},
+    "imgs": {".png"},
     ".github/workflows": {".yml", ".yaml"},
 }
 

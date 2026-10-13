@@ -1,18 +1,53 @@
-# Deployment and container acceptance
+# Deployment guide
 
-The application is configured in its browser interface and stores persistent state
-in `/data`. A new volume contains no connection, password or dashboards. The server
-URL must address the **Portainer server**, not its Agent.
+I designed Portainer Analytics to run either directly under Python or in a small, non-root container. The runtime is configured through its own browser interface and stores application state in SQLite. Docker/Portainer source packaging and native AMD64/ARM64 container acceptance are covered by the repository CI; connecting a particular Portainer installation requires the environment-specific steps below.
 
-The source/browser test suite is synthetic. This release candidate's Docker build,
-native ARM64 execution and live Portainer integration remain **NOT RUN** in the
-preparation environment. Run the following checks on an isolated Docker test host
-before accepting the container for deployment. No base image is distributed here.
+## 1. Before deploying
 
-## Local Docker acceptance
+Confirm that your target is a Docker environment, that Portainer Server is reachable **from the console container**, and that you have a Portainer API token authorized to read the intended environments. An Agent port or Agent address is **not** the Portainer Server API URL.
 
-Use a Linux AMD64 or ARM64 Docker host with Compose v2. These commands use a new
-project name and test volume; port 8082 must be free:
+Use Linux Docker Engine with Compose v2 for container deployment. AMD64 and 64-bit ARM64 builds have passed native CI acceptance. A Raspberry Pi must run a 64-bit OS for the ARM64 target. Port 8082 must be available unless you deliberately change the exposed port.
+
+## 2. Docker Compose
+
+From the repository root:
+
+```sh
+docker compose config --quiet
+docker compose up -d --build
+docker compose ps
+docker compose logs --tail=50
+```
+
+Open `http://localhost:8082` or the trusted gateway address on port `8082`. First-use setup requests an administrator password of at least 12 characters, the Portainer Server URL and an API token. The application validates the connection before creating the workspace.
+
+The Compose service runs under UID/GID `10001:10001`, with a read-only root filesystem, limited temporary filesystem, dropped Linux capabilities and a dedicated `analytics-data` volume mounted at `/data`. It does not mount `/var/run/docker.sock` and does not need privileged access.
+
+## 3. Portainer-only image build and stack deployment
+
+If you want to build and deploy entirely through Portainer, create the upload archive locally first:
+
+```sh
+python scripts/build_release.py
+```
+
+Then, in the desired **Docker Standalone** environment:
+
+1. Open **Images → Build a new image → Upload**.
+2. Select `dist/portainer-analytics-alpha-3-build-context.tar`.
+3. Enter image tag **`portainer-analytics:alpha-3`** and Dockerfile path **`Dockerfile`**.
+4. Build the image and confirm it appears in that environment's **Images** list.
+5. Open **Stacks → Add stack → Upload** and select `portainer-stack.yml`.
+6. Disable automatic image re-pulling and deploy the stack in the **same** environment where the image was built.
+7. Check that the container becomes healthy and open port `8082`.
+
+The generated `.tar` is a Docker **build context**, not a saved image archive for **Images → Import**. The build host needs access to the pinned base image and Python package index. Images created on one standalone Docker endpoint are not automatically available on another.
+
+If Portainer reports HTTP 500 while building or deploying, inspect the actual failing request and Docker/Portainer logs. A frequent configuration error is tagging the image `latest` while the stack requests `alpha-3`.
+
+## 4. Isolated container acceptance
+
+For regression testing on a **fresh, disposable** Docker host/workspace, use:
 
 ```sh
 docker compose -p analytics-acceptance config --quiet
@@ -21,83 +56,50 @@ python scripts/check_container.py --project analytics-acceptance
 docker compose -p analytics-acceptance logs --tail=50
 ```
 
-The check requires an unconfigured test workspace. It verifies the non-root user,
-read-only filesystem, health, denied anonymous management access and persistent
-volume behavior after restart. It writes and removes a synthetic marker in that
-test volume. It does not connect to Portainer or create dashboards.
+The script is intentionally limited to an unconfigured workspace. It checks the non-root account, read-only filesystem, health status, denial of anonymous management access and persistence of a temporary marker through restart. It does not create a production administrator or exercise a live Portainer token.
 
-Then open `http://TEST_HOST_IP:8082`, complete setup against a **test** Portainer
-server and verify environment navigation, fresh measurements, dashboard editing,
-sharing/revocation, themes and restart persistence. Record the Docker, Compose,
-Portainer and Agent versions and CPU architecture in the release audit.
+The GitHub Actions workflow has passed this acceptance sequence on both native Linux AMD64 and ARM64 runners. To qualify your own integration, connect a **test Portainer server** and check environment switching, container stats, dashboard editing, historical samples, sharing/revocation, theme behavior and persistence after restart. Record the exact Portainer, Agent and Docker versions in your deployment notes.
 
-After testing, stop the test stack with:
+When finished, stop only the disposable test stack:
 
 ```sh
 docker compose -p analytics-acceptance down
 ```
 
-Keep the volume if you want to retain the test workspace. Remove only that test
-volume deliberately when finished. Do not reuse these test commands for an existing
-production stack without reviewing the project and volume names.
+Add `--volumes` only if you deliberately want to delete that test workspace's data. Never reuse the acceptance project name against an existing production stack without reviewing the consequences.
 
-## Portainer-only deployment
+## 5. Persistent storage and upgrades
 
-1. Generate a clean context with `python scripts/build_release.py`.
-2. Select the target **Docker Standalone** environment in Portainer.
-3. Open **Images > Build a new image > Upload** and choose
-   `dist/portainer-analytics-alpha-3-build-context.tar`.
-4. Set the image name to `portainer-analytics:alpha-3` and the Dockerfile path to
-   `Dockerfile`. Build it and verify the exact tag under Images.
-5. In the same environment, open **Stacks > Add stack > Upload**, select
-   `portainer-stack.yml`, and deploy with **Re-pull image / Always pull** disabled.
-6. Check the container becomes healthy and open `http://GATEWAY_IP:8082`.
+The named volume `analytics-data` is mounted at `/data`. Compose and Portainer commonly prefix the actual Docker volume name with the project/stack name. Keep the original stack name or explicitly reattach its original volume during upgrades; otherwise you will see a new, empty workspace.
 
-The tar has the Dockerfile at its root. It is not a saved image and cannot be used
-with **Images > Import**. The build takes place on the selected Docker daemon and
-needs registry/Python package access. Native building selects the host architecture;
-a Raspberry Pi should use a 64-bit Linux OS. No 32-bit target is qualified.
+Before upgrades, stop application writes and make a safe SQLite backup (or use SQLite's backup API). Preserve the existing volume while replacing the application image. For local builds use `docker compose up -d --build`; for Portainer, build a new tag, update the existing stack's `image:` value and leave image re-pulling disabled when using the locally built image.
 
-These are the documented Portainer workflows:
-[image builds](https://docs.portainer.io/user/docker/images/build),
-[tar upload form](https://github.com/portainer/portainer/blob/2.21.5/app/docker/views/images/build/buildimage.html),
-[stack uploads](https://docs.portainer.io/user/docker/stacks/add).
-They are instructions to validate for this candidate, not evidence that a deployment
-has already succeeded.
+Do not add `build: .` to a Portainer stack unless a real build context exists on the target daemon. Do not place tokens, live databases or backups inside your Git repository or Docker build context.
 
-If Portainer shows a generic HTTP 500, inspect the failed request's Response in the
-browser's Network tab or the Portainer server container logs. A common diagnosable
-case is an exact image-tag mismatch: `latest` does not satisfy `alpha-3`, and images
-on one environment are not automatically available on another.
+## 6. HTTP, HTTPS and network boundaries
 
-## Persistent data and upgrades
-
-The Compose volume `analytics-data` mounts at `/data`; Docker/Portainer normally
-prefixes its actual name with the stack/project name. Preserve the same volume when
-upgrading. Changing the stack name without selecting the old volume creates a new
-workspace. Back up SQLite safely before upgrading, then stop/replace the container
-while retaining the volume. Dashboard history is subject to rolling retention.
-
-For a local source update, run `docker compose up -d --build`. In Portainer, build
-with a new version tag, change `image:` in the existing stack editor and update the
-stack with registry pulling disabled. Do not introduce `build: .` into a Portainer
-stack that has no corresponding source directory available to its build process.
-
-## HTTPS and network access
-
-Use a reverse proxy with TLS for access beyond a trusted network. Preserve the
-external Host header and set:
+For access outside a controlled LAN, deploy an HTTPS reverse proxy and set:
 
 ```text
 CONSOLE_PUBLIC_URL=https://analytics.example.com
 CONSOLE_ALLOWED_HOSTS=analytics.example.com
 ```
 
-TLS terminates at the proxy. The configured HTTPS public URL enables Secure session
-cookies; access the external HTTPS address rather than the internal HTTP listener.
-Do not expose an unconfigured first-use page to an untrusted network.
+Preserve the Host header through the proxy. The public HTTPS origin enables Secure session cookies; browsers must use that HTTPS address. The built-in service still listens over HTTP behind the proxy. Apply additional ingress restrictions, authentication controls and rate limits as appropriate.
 
-No Docker socket, privileged mode, host filesystem mounts or write access to the
-monitored Docker environment is needed. The Portainer token must permit the read
-operations and environments you want to monitor. Unsupported optional Agent APIs
-are reported as unavailable.
+Avoid publicly exposing the unconfigured first-use screen. Keep application storage and Portainer tokens private. A shared dashboard URL is a read credential: revoke or rotate it if it should no longer grant access.
+
+## 7. Troubleshooting
+
+| Symptom | Check |
+| --- | --- |
+| Port 8082 is unavailable | Another service may already be listening; change the published port or stop the conflicting service |
+| Cannot connect to Portainer | Use the Portainer **Server** API URL, not an Agent address; verify DNS, TLS trust, token and network access |
+| No image with tag `alpha-3` | Build the image in the same Docker environment and use the exact image tag requested by the stack |
+| `Host not allowed` | Add the external DNS hostname to `CONSOLE_ALLOWED_HOSTS` or use an accepted private LAN hostname/address |
+| Login loops behind a proxy | Configure the correct HTTPS `CONSOLE_PUBLIC_URL`, preserve Host and use the external HTTPS endpoint |
+| Missing optional Agent/host metrics | Verify Docker and Agent capability, permissions and runtime support; missing is not zero |
+| Dashboards have disappeared | Check whether a new named volume or stack name was used instead of the original `/data` volume |
+| Container fails its healthcheck | Inspect `docker compose logs`, `/api/health`, dependency availability and data-volume write permissions |
+
+For architectural scope see [README.md](../README.md), metric semantics in [METRICS.md](../METRICS.md), and the exact recorded test outcomes in [RELEASE_AUDIT.md](../RELEASE_AUDIT.md).

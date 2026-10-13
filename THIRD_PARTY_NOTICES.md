@@ -1,80 +1,37 @@
 # Third-party notices
 
-This inventory describes dependencies and resources used by Portainer Analytics.
-Dependencies retain their own licenses. Application code is distributed under
-the [MIT license](LICENSE); see [Licensing](docs/LICENSING.md).
+Portainer Analytics application code and documentation are licensed under [MIT](LICENSE). The dependencies listed here retain their own licenses and are **not** relicensed by this project. This document records the reviewed direct dependencies, development tooling and interface assets; installed distribution notices and applicable upstream license texts remain authoritative.
 
-## Python runtime dependencies
+## Python runtime packages
 
-The following versions and license identifiers were checked against installed
-Python distribution metadata and their included license files during preparation.
-The release dependency files define the versions to install. Upstream links are
-provided for reference; installed distribution notices remain authoritative for
-the exact package version.
-
-| Package | Reviewed version | License | Upstream notices |
+| Package | Pinned version | License | Upstream reference |
 | --- | --- | --- | --- |
-| Requests | 2.34.2 | Apache-2.0 | [License](https://github.com/psf/requests/blob/main/LICENSE), [NOTICE](https://github.com/psf/requests/blob/main/NOTICE) |
-| urllib3 | 2.8.0 | MIT | [License](https://github.com/urllib3/urllib3/blob/main/LICENSE.txt) |
-| certifi | 2026.7.22 | MPL-2.0 | [License and certificate-bundle provenance](https://github.com/certifi/python-certifi/blob/master/LICENSE) |
-| charset-normalizer | 3.5.2 | MIT | [License](https://github.com/jawah/charset_normalizer/blob/master/LICENSE) |
-| idna | 3.20 | BSD-3-Clause | [License](https://github.com/kjd/idna/blob/master/LICENSE.md) |
+| requests | `2.34.2` | Apache-2.0 | [LICENSE](https://github.com/psf/requests/blob/main/LICENSE) / [NOTICE](https://github.com/psf/requests/blob/main/NOTICE) |
+| urllib3 | `2.8.0` | MIT | [LICENSE](https://github.com/urllib3/urllib3/blob/main/LICENSE.txt) |
+| certifi | `2026.7.22` | MPL-2.0 | [License and CA provenance](https://github.com/certifi/python-certifi/blob/master/LICENSE) |
+| charset-normalizer | `3.5.2` | MIT | [LICENSE](https://github.com/jawah/charset_normalizer/blob/master/LICENSE) |
+| idna | `3.20` | BSD-3-Clause | [LICENSE](https://github.com/kjd/idna/blob/master/LICENSE.md) |
 
-Requests' distributed NOTICE identifies: Copyright 2019 Kenneth Reitz.
+Requests' distribution NOTICE identifies copyright 2019 Kenneth Reitz. Runtime Python dependencies are installed from hash-locked requirements instead of being vendored into the source. Preserve their `*.dist-info` metadata and license files when distributing an installed runtime environment.
 
-The repository declares these dependencies instead of vendoring their source.
-Installing them with pip retains the distribution metadata and license files in
-`site-packages/*.dist-info/`. Keep those files when packaging or redistributing an
-environment or container; do not strip license directories to reduce image size.
-This summary is not a substitute for the complete licenses and required notices.
+certifi includes Mozilla-derived certificate data; its MPL-covered material retains its own terms. Refer to the [Mozilla Public License 2.0 FAQ](https://www.mozilla.org/en-US/MPL/2.0/FAQ/) for applicable distribution obligations.
 
-certifi includes Mozilla-derived certificate data. It is installed without local
-modifications. Its MPL-covered files retain their own terms; see the upstream
-[MPL FAQ](https://www.mozilla.org/en-US/MPL/2.0/FAQ/) for distribution of larger
-works and source-availability requirements.
+## Development-only packages
 
-## Development tools
+Browser tests use [Playwright](https://github.com/microsoft/playwright/blob/main/LICENSE) `1.64.0` (Apache-2.0) and [jsdom](https://github.com/jsdom/jsdom/blob/main/LICENSE.txt) `30.1.2` (MIT). Their transitive dependency versions are recorded in `package-lock.json`. The earlier reviewed Node development tree contained 38 packages with metadata identifying MIT, MIT-0, BSD-2-Clause, BSD-3-Clause, Apache-2.0, ISC, CC0-1.0 and BlueOak-1.0.0 license identifiers. Complete package texts take precedence over this summary.
 
-JavaScript browser tests use [Playwright](https://github.com/microsoft/playwright/blob/main/LICENSE)
-(Apache-2.0) and [jsdom](https://github.com/jsdom/jsdom/blob/main/LICENSE.txt) (MIT).
-Their versions and transitive dependencies are managed by the development package
-lockfile. They are not included in the application runtime image. Browser binaries
-installed for testing have their own notices and are not included in this source
-repository. Preserve dependency notices when distributing development environments.
+Node packages and Playwright browser executables are used for development tests; they are **not** included in the application runtime Docker image. Python development tools are similarly excluded from the runtime dependency set. Retain their notices if you redistribute a development environment.
 
-The reviewed direct versions are Playwright 1.64.0 and jsdom 30.1.2. License metadata
-for all 38 locked Node packages was present: MIT, MIT-0, BSD-2-Clause, BSD-3-Clause,
-Apache-2.0, ISC, CC0-1.0 and BlueOak-1.0.0. The lockfile records the package-level
-identifiers; the installed packages retain their complete license texts.
+## Python and the base container
 
-Python development tools are installation dependencies, not application source.
-Their package metadata and installed licenses must be retained when redistributing
-the tools. A runtime dependency inventory is not a complete inventory of a separate
-development environment.
+The Dockerfile uses the official `python:3.14.6-slim-bookworm` image pinned to a manifest digest. Python has [PSF and incorporated-software license terms](https://docs.python.org/3.14/license.html); the Debian-based image includes operating-system packages with additional licenses.
 
-## Python and the container base
+A source dependency audit does not establish that every container OS package is vulnerability-free or that every image redistribution obligation has been discharged. Inspect the actual built image and preserve applicable notices before publishing an image to a registry. The [runtime SBOM](docs/sbom-runtime.cdx.json) is limited to Python runtime libraries.
 
-Python includes the PSF license and additional incorporated-software notices;
-see [Python's license documentation](https://docs.python.org/3.14/license.html).
-The Docker build uses an [official Python image](https://hub.docker.com/_/python),
-which also contains operating-system packages with separate licenses.
+## Interface and documentation
 
-Building a container does not relicense its base or installed dependencies.
-Preserve their notices and review the actual built image, package inventory and
-applicable source-distribution obligations before publishing an image. The source
-repository contains no redistributed base image or browser binary. Container
-license verification is separate from this source inventory; its execution status
-is recorded in [the release audit](RELEASE_AUDIT.md).
+The runtime frontend uses local HTML, CSS and JavaScript with system-font fallbacks. It does not bundle third-party font binaries, icon packages, stock photos, externally hosted UI scripts or Portainer application source. The screenshots in `imgs/` are documentation of the project's own interface, not an external runtime asset.
 
-## Interface resources and names
+Portainer Analytics is independently developed against the Portainer API. Portainer and third-party marks remain the property of their respective owners. This repository does not claim their endorsement.
 
-The inspected interface consists of local HTML, CSS and JavaScript. No third-party
-font files, stock images or icon-package assets are bundled. Typography uses local
-system-font fallbacks; naming a font family in CSS does not bundle that font.
-Navigation symbols are text characters, the brand mark uses CSS, and charts are
-drawn by the application's code. No CDN is required for interface resources.
-
-Portainer Analytics is an independent application that connects to the Portainer
-API. It is not presented as an official, endorsed or certified Portainer product.
-Portainer and other third-party product names belong to their respective owners.
-No Portainer logo or Portainer application source is included in this repository.
+See [Licensing](docs/LICENSING.md) and [Release audit](RELEASE_AUDIT.md) for distribution requirements and verification boundaries.

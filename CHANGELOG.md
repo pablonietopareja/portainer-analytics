@@ -1,20 +1,30 @@
 # Changelog
 
-## alpha.3 - 2026-10-12
+## alpha.3 — 2026-10-12
 
-First standalone alpha source release, based on the existing alpha.2 console.
+This is the first standalone public alpha source release of Portainer Analytics. I consolidated the existing `alpha.2` console into a distributable project and aligned local development, automated tests and container deployment around the same application.
 
-- Removed parent-directory configuration and the duplicate unauthenticated server
-  entry point. Fresh local and container installations now use the same setup flow.
-- Required administrator authentication in normal runtime, bounded sessions and
-  concurrent HTTP handlers, added socket read timeouts and HTTPS cookie support.
-- Preserved environment views, themes, metric definitions, saved dashboards and
-  shared displays. The default local port is now 8082, matching Docker deployment.
-- Added hash-locked Python dependencies, locked browser-test tooling, a pinned
-  multi-stage Dockerfile, isolated synthetic tests, CI and deployment documentation.
-- Added source/build-context packaging, security checks, third-party notices and
-  an MIT license following the author's confirmation.
+### Application
 
-Execution evidence and outstanding container checks are in
-[RELEASE_AUDIT.md](RELEASE_AUDIT.md). Earlier development history is not reconstructed
-as published releases.
+- Kept the environment overview, container and stack inventory, charts, metric selection, dashboard editor, saved layouts and read-only dashboard sharing.
+- Standardized the initial administrator setup and sign-in workflow for Python and Docker installations.
+- Added light, dark and system themes, along with responsive dashboard and navigation behavior.
+- Standardized the application listening port to `8082`.
+
+### Reliability and security
+
+- Removed inherited parent-directory credential loading and the duplicate unauthenticated entry point.
+- Bounded HTTP handlers, session count, request sizes and socket idle time; hardened session and CSRF handling.
+- Replaced dynamic SQL identifier interpolation with explicit query paths.
+- Added hash-locked Python requirements, pinned development dependencies and maintained third-party license notices.
+
+### Packaging and validation
+
+- Added a multi-stage, non-root Dockerfile, persistent-volume Compose definitions, a healthcheck and isolated container acceptance tests.
+- Added automated Python, JavaScript, DOM and Chromium tests with synthetic Portainer fixtures.
+- Added GitHub Actions checks on Windows and Linux plus native Docker acceptance on AMD64 and ARM64.
+- Added deterministic source and Docker-context packaging scripts, documentation and the MIT License.
+
+**Verification update — 2026-10-13:** All four GitHub Actions matrix jobs completed successfully, including both native container acceptance jobs. See [RELEASE_AUDIT.md](RELEASE_AUDIT.md) for exactly what they cover and what still requires live-deployment qualification.
+
+The repository's interface screenshots illustrate a running installation. Earlier development iterations are not represented as separately published releases.
