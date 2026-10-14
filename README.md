@@ -61,7 +61,7 @@ The runtime uses five Python modules and local HTML, CSS and JavaScript. There i
 | Browser | Modern JavaScript-capable browser; automated browser coverage uses Chromium |
 | Development | Node.js matching `package.json` for frontend tests only |
 
-The CI workflow includes Windows/Linux source checks and native Linux AMD64/ARM64 container acceptance. The published 1.0.0 candidate passed Ubuntu source checks and both native container jobs; its Windows source job failed in release-path regression tests. **Remote verification of the Windows remediation is pending**. Synthetic tests do not establish compatibility with every Portainer Server, Agent or Edge configuration. See the revision-specific [verification record](RELEASE_AUDIT.md).
+Source revision `3671d45a3d9ca2f83cccc218c36843ff1e886b13` passed Ubuntu and Windows source checks and native Linux AMD64/ARM64 container acceptance in both recorded CI executions, including the corrected Windows packaging tests. Synthetic tests do not establish compatibility with every Portainer Server, Agent or Edge configuration. See the revision-specific [verification record](RELEASE_AUDIT.md); subsequent commits require their own CI runs.
 
 ## Quick start: Docker Compose
 

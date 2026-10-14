@@ -2,7 +2,7 @@
 
 ## 1.0.0 - 2026-10-13
 
-This source revision prepares Portainer Analytics 1.0.0. GitHub release publication is separate from source preparation; final remote CI evidence is pending in [RELEASE_AUDIT.md](RELEASE_AUDIT.md).
+The Portainer Analytics 1.0.0 source candidate at `3671d45a3d9ca2f83cccc218c36843ff1e886b13` passed Ubuntu and Windows source checks and native Linux AMD64/ARM64 container acceptance in both recorded CI executions. See [RELEASE_AUDIT.md](RELEASE_AUDIT.md) for revision-specific evidence and remaining limitations. Git tag creation and formal GitHub Release publication are separate steps; this entry does not claim either has occurred. Subsequent commits require their own CI runs.
 
 ### Release consistency
 
@@ -11,6 +11,7 @@ This source revision prepares Portainer Analytics 1.0.0. GitHub release publicat
 - Use descriptive UI assets and integration-test names, with regression coverage for version agreement and packaging.
 - Show the actual browser port in the interface, including customized published ports.
 - Refresh public documentation and screenshots with synthetic test data.
+- Fix Windows packaging validation by comparing canonical child paths with a canonical root, preserving traversal, link-escape and credential rejection. Retain existing assertions and add regression coverage for noncanonical and linked roots.
 
 ### Deployment and security
 

@@ -1,17 +1,30 @@
 # Release verification record - 1.0.0
 
 - **Target version:** `1.0.0`
-- **Review date:** 2026-10-13
+- **Review date:** 2026-10-14
 - **Repository:** [pablonietopareja/portainer-analytics](https://github.com/pablonietopareja/portainer-analytics)
-- **Published 1.0.0 candidate:** `4890c05cee15a3d24e34d4c8dd5da24bd39c3612`
-- **Source under review:** local Windows release-path remediation based on that candidate
-- **Remote verification of the remediation:** **PENDING REMOTE CI**
+- **Validated source revision:** `3671d45a3d9ca2f83cccc218c36843ff1e886b13`
+- **Remote verification of that revision:** **PASS** in both CI executions below
+- **CI for the documentation closure commit:** **PENDING** until this update is committed and its own workflow completes
 
-This is a maintainer verification record, not independent third-party certification. Local working-tree results apply to the reviewed files. The remediation has no remote result yet: its final commit must complete its own CI run before the record can be supplemented with revision-specific evidence.
+This is a maintainer verification record, not independent third-party certification. The successful remote results apply specifically to `3671d45a3d9ca2f83cccc218c36843ff1e886b13`. This documentation update creates a new revision when committed and requires its own CI run; the existing results do not verify that future commit.
+
+## Validated CI evidence
+
+[GitHub Actions run 38459321879](https://github.com/pablonietopareja/portainer-analytics/actions/runs/38459321879) and [GitHub Actions run 38459321693](https://github.com/pablonietopareja/portainer-analytics/actions/runs/38459321693) both completed successfully on 2026-10-13 for source revision `3671d45a3d9ca2f83cccc218c36843ff1e886b13`. The revision, run conclusions and all four job outcomes in each execution were verified through the GitHub API.
+
+| Job | Run 38459321879 | Run 38459321693 | Scope |
+| --- | --- | --- | --- |
+| `checks (ubuntu-24.04)` | **PASS** | **PASS** | Ubuntu source, frontend, packaging and configured security checks |
+| `checks (windows-2025)` | **PASS** | **PASS** | Windows source checks, including the corrected release-path regressions and subsequent frontend, packaging and security steps |
+| `docker (ubuntu-24.04)` | **PASS** | **PASS** | Native Linux AMD64 build and isolated container acceptance |
+| `docker (ubuntu-24.04-arm)` | **PASS** | **PASS** | Native Linux ARM64 build and isolated container acceptance |
+
+The Windows packaging incident is resolved in this validated revision. Synthetic acceptance and application dependency checks do not establish live Portainer compatibility or replace a full built-image operating-system vulnerability scan.
 
 ## Historical CI evidence
 
-[GitHub Actions run 38438590497](https://github.com/pablonietopareja/portainer-analytics/actions/runs/38438590497) completed with **FAILURE** for published source revision `4890c05cee15a3d24e34d4c8dd5da24bd39c3612`. The run SHA, job outcomes and Windows step statuses were checked through the GitHub API.
+[GitHub Actions run 38438590497](https://github.com/pablonietopareja/portainer-analytics/actions/runs/38438590497) completed with **FAILURE** for published source revision `4890c05cee15a3d24e34d4c8dd5da24bd39c3612`. This historical Windows incident was resolved by the canonical-path correction in `3671d45a3d9ca2f83cccc218c36843ff1e886b13`, verified by both successful executions above. The historical run SHA, job outcomes and Windows step statuses were checked through the GitHub API.
 
 | Job | Recorded result | Scope |
 | --- | --- | --- |
@@ -22,19 +35,19 @@ This is a maintainer verification record, not independent third-party certificat
 
 After the Windows unit-test failure, JavaScript syntax, frontend unit tests, browser acceptance, source verification, release packaging, Bandit, pip-audit and npm audit were **SKIPPED** on that runner. They are neither passes nor failures there. The two native container jobs succeeded; the recorded Windows source failure is not a Docker runtime failure.
 
-[GitHub Actions run 38371715631](https://github.com/pablonietopareja/portainer-analytics/actions/runs/38371715631) completed successfully for earlier source revision `dcff77cacec7b88481fd7754d8f4a76d28ba223c`. Its four jobs cover Ubuntu and Windows source checks, plus native Linux AMD64 and ARM64 container acceptance. Neither historical run verifies the new local remediation.
+[GitHub Actions run 38371715631](https://github.com/pablonietopareja/portainer-analytics/actions/runs/38371715631) completed successfully for earlier source revision `dcff77cacec7b88481fd7754d8f4a76d28ba223c`. Its four jobs cover Ubuntu and Windows source checks, plus native Linux AMD64 and ARM64 container acceptance. These earlier runs apply only to their listed revisions; completed remediation evidence is recorded separately above.
 
 The source-check pipeline includes locked dependency installs, Python lint/format/tests, JavaScript and browser tests, source/release verification, deterministic packaging, Bandit, pip-audit and npm audit. Container jobs build and start isolated, unconfigured application instances and check non-root operation, the read-only root filesystem, anonymous management denial and restart persistence.
 
-## Windows release-path remediation
+## Resolved Windows release-path incident
 
 The archive reader compared a resolved child path against an unresolved root. A local Windows NTFS junction reproduced both reported errors: an existing `.dockerignore` was rejected, and a synthetic credential fixture was rejected as a missing file before content validation. The resolved files were contained by the canonical root but not by the lexical alias. The exact temporary-directory alias on the hosted Windows runner was not diagnosed directly and remains unverified.
 
-The reader now canonicalizes the root once and compares canonical child paths against that root. Strict archive-name validation remains in place and explicitly rejects POSIX absolute names, Windows drive-qualified names, backslashes, empty path components and traversal. It still rejects missing files, leaf symlinks, resolved parent-link escapes and credential-like content. Existing archive-content, metadata, checksum and reproducibility assertions are preserved. Two new regressions cover noncanonical roots and linked roots with an escaping child; Windows runs real NTFS junction fixtures, while the Linux branch uses directory and file symlinks.
+The reader canonicalizes the root once and compares canonical child paths against that root. Strict archive-name validation remains in place and explicitly rejects POSIX absolute names, Windows drive-qualified names, backslashes, empty path components and traversal. It still rejects missing files, leaf symlinks, resolved parent-link escapes and credential-like content. Existing archive-content, metadata, checksum and reproducibility assertions are preserved. Two regressions cover noncanonical roots and linked roots with an escaping child; Windows runs real NTFS junction fixtures, while the Linux branch uses directory and file symlinks. Both platform source jobs passed for the validated revision.
 
 ## Local verification
 
-The following results record checks of the local remediation on Windows with Python 3.14.6. `NOT RUN` is not a passing result. New remote jobs remain pending until the final reviewed remediation is committed and its workflow completes.
+The following evidence records Windows checks performed on 2026-10-13 during remediation, before commit `3671d45a3d9ca2f83cccc218c36843ff1e886b13`, using Python 3.14.6. These results are retained as local evidence and were not rerun for this documentation-only closure. `NOT RUN` remains distinct from the completed remote CI recorded above.
 
 | Check | Status | Evidence and scope |
 | --- | --- | --- |
@@ -60,10 +73,8 @@ The following results record checks of the local remediation on Windows with Pyt
 | Final whitespace and current release-reference sweep | **PASS** | `git diff --check`; exhaustive case-insensitive checks found zero old release-label matches in current source text and filenames; separate visual screenshot review passed |
 | Local disposable Docker acceptance | **NOT RUN** | No Docker Engine/daemon is available locally; standalone Compose validation cannot verify container behavior |
 | Local native ARM64 acceptance | **NOT RUN** | No native ARM64 runner is available locally; cross-building is not native acceptance |
-| Local Linux source suite | **NOT RUN** | No installed WSL Linux distribution is available; the historical Ubuntu pass covers the published candidate, not the remediation |
-| Local Windows file/parent symlink fixtures | **NOT RUN** | Creating symlinks requires unavailable privileges; real NTFS junction cases ran, and the POSIX symlink cases must execute in the new Linux CI |
-| New Ubuntu/Windows source CI | **PENDING REMOTE CI** | Final remediation revision has not completed a remote run |
-| New native AMD64/ARM64 container CI | **PENDING REMOTE CI** | Historical passing jobs cannot qualify new changes |
+| Local Linux source suite | **NOT RUN** | No installed WSL Linux distribution was available locally; Ubuntu source CI passed for the validated revision |
+| Local Windows file/parent symlink fixtures | **NOT RUN** | Creating symlinks required unavailable privileges; real NTFS junction cases ran locally, and the POSIX symlink cases ran in the validated Linux source CI |
 | Exact-version live Portainer integration | **NOT RUN** | Must use a separately authorized test environment |
 | Built-image OS advisory and complete license scan | **NOT RUN** | No local built image/daemon is available; Python/npm audits and source notices do not cover the full image |
 
@@ -83,7 +94,7 @@ The supplied Docker Compose and Docker Standalone stack manifests publish to hos
 
 The runtime uses salted scrypt password hashes, cookie sessions and CSRF checks for management. Portainer API tokens are stored **without application-level encryption**. Dashboard share URLs are bearer credentials. Secure cookies require the actual HTTPS origin in `CONSOLE_PUBLIC_URL`; the built-in server does not terminate TLS.
 
-Local validation uses Python 3.14.6, Node.js 24.18.0, npm 11.16.0 and Chromium 156.0.8078.4 through Playwright 1.64.0. Container security settings were exercised by the published candidate's native AMD64 and ARM64 CI jobs; they have not been run locally for the remediation because no Docker daemon is available.
+The recorded local validation used Python 3.14.6, Node.js 24.18.0, npm 11.16.0 and Chromium 156.0.8078.4 through Playwright 1.64.0. Container security settings were exercised by the validated revision's native AMD64 and ARM64 CI jobs in both successful executions. Local Docker acceptance remains unperformed because no Docker daemon was available.
 
 Archive reproducibility was checked for identical source bytes with the same Python/compression toolchain. Fixed ZIP Unix metadata, timestamps, file modes and LF checksum output remove those platform differences; byte identity across different compression-library versions has not been established. Rebuild and verify checksums after any source change, including changes to this record.
 
@@ -97,4 +108,4 @@ The [runtime CycloneDX SBOM](docs/sbom-runtime.cdx.json) lists only the five loc
 
 See [Deployment](docs/DEPLOYMENT.md), [Security](SECURITY.md) and [Contributing](CONTRIBUTING.md) for installation, safeguards and reproducible verification commands.
 
-**Release disposition:** Published candidate `4890c05cee15a3d24e34d4c8dd5da24bd39c3612` failed Windows source CI. Local remediation checks passed as recorded above; all four jobs must run again for its final commit. This record does not claim that a GitHub release, tag or registry image has been published.
+**Release disposition:** Source revision `3671d45a3d9ca2f83cccc218c36843ff1e886b13` passed all four jobs in both recorded CI executions, resolving the historical Windows packaging failure. Live Portainer integration and a full built-image OS vulnerability and license assessment remain unperformed. The subsequent documentation commit requires its own CI run. This record does not claim that a GitHub release, tag or registry image has been published.
