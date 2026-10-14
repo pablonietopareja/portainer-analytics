@@ -61,9 +61,11 @@ The runtime uses five Python modules and local HTML, CSS and JavaScript. There i
 | Browser | Modern JavaScript-capable browser; automated browser coverage uses Chromium |
 | Development | Node.js matching `package.json` for frontend tests only |
 
-Source revision `3671d45a3d9ca2f83cccc218c36843ff1e886b13` passed Ubuntu and Windows source checks and native Linux AMD64/ARM64 container acceptance in both recorded CI executions, including the corrected Windows packaging tests. Synthetic tests do not establish compatibility with every Portainer Server, Agent or Edge configuration. See the revision-specific [verification record](RELEASE_AUDIT.md); subsequent commits require their own CI runs.
+The published `v1.0.0` revision, `724531289db31d5e37bc3aa4baaf1114bd074c93`, passed Ubuntu and Windows source checks and native Linux AMD64/ARM64 container acceptance in [CI run 38521810456](https://github.com/pablonietopareja/portainer-analytics/actions/runs/38521810456) and [CI run 38525747883](https://github.com/pablonietopareja/portainer-analytics/actions/runs/38525747883), including the corrected Windows packaging tests. Synthetic tests do not establish compatibility with every Portainer Server, Agent or Edge configuration or replace a full built-image OS vulnerability scan. See the revision-specific [verification record](RELEASE_AUDIT.md).
 
 ## Quick start: Docker Compose
+
+The following commands use `main`. For the immutable `v1.0.0` source checkout, use `git clone --branch v1.0.0 --depth 1 https://github.com/pablonietopareja/portainer-analytics.git` as the first command.
 
 ```sh
 git clone https://github.com/pablonietopareja/portainer-analytics.git

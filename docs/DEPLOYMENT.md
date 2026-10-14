@@ -6,7 +6,7 @@ Portainer Analytics 1.0.0 runs directly with Python or as a non-root Linux conta
 
 Use a Portainer **Server** URL reachable from the application and an API token authorized to read the intended Docker environments. An Agent address is not a Portainer Server API URL. Keep Portainer TLS verification enabled and configure trust for your server's certificate.
 
-Container deployment requires Linux Docker Engine with Compose v2. The published 1.0.0 candidate passed native AMD64 and ARM64 container acceptance; its Windows source job failed in release-path regression tests. Remote verification of the remediation is pending. ARM64 requires a 64-bit host OS. The [verification record](../RELEASE_AUDIT.md) states the available evidence and limitations.
+Container deployment requires Linux Docker Engine with Compose v2. Tagged `v1.0.0` revision `724531289db31d5e37bc3aa4baaf1114bd074c93` passed Ubuntu and Windows source checks and native Linux AMD64/ARM64 container acceptance in [CI run 38521810456](https://github.com/pablonietopareja/portainer-analytics/actions/runs/38521810456) and [CI run 38525747883](https://github.com/pablonietopareja/portainer-analytics/actions/runs/38525747883). These checks do not include live Portainer integration or a full built-image OS vulnerability scan. ARM64 requires a 64-bit host OS. The [verification record](../RELEASE_AUDIT.md) states the available evidence and limitations.
 
 ## Docker Compose
 
